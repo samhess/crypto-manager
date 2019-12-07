@@ -1,45 +1,135 @@
 <template>
-  <div class="about">
+  <div class="portfolio">
     <h1>Portfolio</h1>
-    <div class="mdc-data-table">
-      <table class="mdc-data-table__table" aria-label="Portfolio">
-        <thead>
-          <tr class="mdc-data-table__header-row">
-            <th class="mdc-data-table__header-cell--checkbox" role="columnheader" scope="col"><input type="checkbox"></th>
-            <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric" role="columnheader" scope="col">ID</th>
-            <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Symbol</th>
-            <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric" role="columnheader" scope="col">Amount</th>
-            <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric" role="columnheader" scope="col">Price</th>
-            <th class="mdc-data-table__header-cell mdc-data-table__header-cell--numeric" role="columnheader" scope="col">Value</th>
-          </tr>
-        </thead>
-        <tbody class="mdc-data-table__content">
-          <tr v-for="(coin,index) in coins" v-bind:key="index" class="mdc-data-table__row">
-            <td  class="mdc-data-table__cell--checkbox"><input type="checkbox"></td>
-            <td v-for="attr in coin" v-bind:key="attr.id" class="mdc-data-table__cell mdc-data-table__cell--numeric">{{attr}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <v-data-table :headers="headers" :items="coins" :items-per-page="10" >
+      <template slot="top">
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on }">
+            <div align="right">
+              <v-btn color="primary" dark v-on="on">ADD</v-btn>
+            </div>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">Add coin</span>
+            </v-card-title>
+            <v-card-text>
+              <v-container>
+                <v-row>
+                  <v-col cols="12">
+                    <v-select :items="coin" item-text="symbol" v-model="newItem.symbol" label="Coin"> </v-select>
+                    <v-text-field v-model="newItem.amount" label="Amount"></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+            <v-card-actions>
+              <div class="flex-grow-1"></div>
+              <v-btn color="blue darken-1" text @click="closeDialog">Cancel</v-btn>
+              <v-btn color="blue darken-1" text @click="saveDialog">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </template>
+      <template v-slot:item.amount="props">
+        <v-edit-dialog
+          :return-value.sync="props.item.amount"
+          @save="save(props.item)"
+        > {{ props.item.amount }}
+          <template v-slot:input>
+            <v-text-field
+              v-model="props.item.amount"
+              :rules="[max25chars]"
+              label="Edit"
+              single-line
+              counter
+            ></v-text-field>
+          </template>
+        </v-edit-dialog>
+      </template>
+    </v-data-table>
+    <v-snackbar v-model="snack" :timeout="2000" :color="snackColor">
+      {{ snackText }}
+      <v-btn text @click="snack = false">Close</v-btn>
+    </v-snackbar>
   </div>
 </template>
 <script>
 import axios from 'axios';
 export default {
   name: 'portfolio',
-  props: [''],
+  props: ['user'],
   data() {
     return {
-      coins: '',
+      headers: [
+        { text: 'ID', value: 'id'},
+        { text: 'Symbol', value: 'symbol'},
+        { text: 'Amount', value: 'amount'},
+        { text: 'Price', value: 'price'},
+        { text: 'Value', value: 'value'},
+      ],
+      dialog: false,
+      newItem: {},
+      snack: false,
+      snackColor: '',
+      snackText: '',
+      max25chars: v => v.length <= 25 || 'Input too long!',
+      coin: [],
+      coins: [],
     };
   },
   methods: {
-
+    async save (item) {
+      var idx = this.coins.indexOf(item)
+      this.coins[idx].value = item.amount * item.price
+      var res = await axios.put('/api/title', item)
+        .then(res => res.data)
+        .catch(err => {
+          this.snack = true
+          this.snackColor = 'error'
+          this.snackText = 'Not saved: ' + err
+        })
+      if (res === 1) {
+        this.snack = true
+        this.snackColor = 'success'
+        this.snackText = 'Saved in database'
+      }
+    },
+    add () {
+      this.coins.push({
+        'id' : null,
+        'symbol' :'NEW',
+        'amount' : 0,
+        'price' : 0,
+        'value' : 0
+      })
+    },
+    closeDialog () {
+      this.dialog = false
+    },
+    saveDialog () {
+      this.dialog = false
+      axios.post('/api/title', this.newItem)
+        .then(response => {
+          var id = response.data
+          if (id) {
+                  var coinData = this.coin.find(el => el.symbol === this.newItem.symbol)
+                  this.coins.push({
+                    'id' : id[0],
+                    'symbol' : this.newItem.symbol,
+                    'amount' : this.newItem.amount,
+                    'price': coinData.price,
+                    'value': this.newItem.amount * coinData.price
+                  })
+          }
+        })
+    }
   },
   async mounted() {
-    this.coins = await axios.get('/api/coin')
-      .then(response => response.data);
-    // console.log(this.coins)
+    this.coins = await axios.get('/api/title')
+      .then(response => response.data)
+    this.coin = await axios.get('/api/coin')
+      .then(response => response.data)
   }
 }
 </script>
