@@ -1,5 +1,5 @@
 CREATE SCHEMA crypto;
-use crypto;
+USE crypto;
 
 CREATE TABLE `coin` (
   `coinId` int(11) NOT NULL AUTO_INCREMENT,
@@ -14,7 +14,7 @@ CREATE TABLE `coin` (
   `percent_change_7d` decimal(10,2) DEFAULT NULL,
   `market_cap` decimal(20,2) DEFAULT NULL,
   PRIMARY KEY (`coinId`)
-)
+);
 
 CREATE TABLE `user` (
   `userId` int(11) NOT NULL,
@@ -27,11 +27,11 @@ CREATE TABLE `user` (
   `firstname` varchar(45) DEFAULT NULL,
   `fullname` varchar(91) GENERATED ALWAYS AS (concat(`firstname`,_utf8mb4' ',`lastname`)) VIRTUAL,
   PRIMARY KEY (`userId`)
-)
+);
 
 CREATE TABLE `portfolio` (
   `positionId` int(11) NOT NULL AUTO_INCREMENT,
-  `amount` int(11) DEFAULT NULL,
+  `amount` decimal(10,2) DEFAULT NULL,
   `coinId` int(11) DEFAULT NULL,
   `userId` int(11) DEFAULT NULL,
   PRIMARY KEY (`positionId`),
@@ -39,10 +39,11 @@ CREATE TABLE `portfolio` (
   KEY `user` (`userId`),
   CONSTRAINT `coin` FOREIGN KEY (`coinId`) REFERENCES `coin` (`coinId`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `user` FOREIGN KEY (`userId`) REFERENCES `user` (`userId`) ON DELETE RESTRICT ON UPDATE RESTRICT
-)
+);
 
 CREATE VIEW portfolio AS
   Select *,
     amount * price as value
   FROM portfolio
-    JOIN coin USING (coinId);
+    JOIN coin USING (coinId)
+  ORDER BY cmc_rank;

@@ -1,6 +1,6 @@
 <template>
   <div class="portfolio">
-    <h1>Portfolio</h1>
+    <h1>Portfolio {{portfolioValue.toFixed(0)}} USD</h1>
     <v-data-table :headers="headers" :items="portfolio" :items-per-page="10" >
       <template slot="top">
         <v-dialog v-model="dialog" max-width="500px">
@@ -30,6 +30,23 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+      </template>
+      <!-- the actual data table -->
+      <!--
+      <template slot="header" slot-scope="props">
+        <tr>
+          <th class="text-start">{{ props.props.headers[0].text }}</th>
+          <th class="text-start">{{ props.props.headers[1].text}}</th>
+          <th class="text-start">{{ props.props.headers[2].text }}</th>
+          <th class="text-end">{{ props.props.headers[3].text }}</th>
+          <th class="text-end">{{ props.props.headers[4].text }}</th>
+          <th class="text-end">{{ props.props.headers[5].text }}</th>
+          <th class="text-end">{{ props.props.headers[6].text }}</th>
+        </tr>
+      </template>
+      -->
+      <template v-slot:item.action="props">
+        <v-icon small @click="deleteItem(props.item)">mdi-delete</v-icon>
       </template>
       <template v-slot:item.amount="props">
         <v-edit-dialog
@@ -62,12 +79,13 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'Position', value: 'positionId'},
-        { text: 'Name', value: 'name'},
-        { text: 'Symbol', value: 'symbol'},
-        { text: 'Amount', value: 'amount'},
-        { text: 'Price', value: 'price'},
-        { text: 'Value', value: 'value'},
+        { text: 'Rank', value: 'cmc_rank', align: 'left',},
+        { text: 'Name', value: 'name', align: 'left',},
+        { text: 'Symbol', value: 'symbol', align: 'left',},
+        { text: 'Amount', value: 'amount', align: 'end',},
+        { text: 'Price', value: 'price', align: 'end',},
+        { text: 'Value', value: 'value', align: 'end',},
+        { text: 'Action', value: 'action', align: 'center',},
       ],
       dialog: false,
       newItem: {},
@@ -77,6 +95,7 @@ export default {
       max25chars: v => v.length <= 25 || 'Input too long!',
       coins: [],
       portfolio: [],
+      portfolioValue: 0
     };
   },
   methods: {
@@ -117,6 +136,7 @@ export default {
                   var coinData = this.coins.find(el => el.symbol === this.newItem.symbol)
                   this.portfolio.push({
                     'positionId' : id[0],
+                    'cmc_rank' : coinData.cmc_rank,
                     'name': coinData.name,
                     'symbol' : this.newItem.symbol,
                     'amount' : this.newItem.amount,
@@ -125,11 +145,26 @@ export default {
                   })
           }
         })
+    },
+    deleteItem(item) {
+      var index = this.portfolio.indexOf(item)
+      if (confirm('Are you sure you want to delete your ' + item.name + ' position?')) {
+        this.portfolio.splice(index, 1)
+        axios.delete(`/api/portfolio/${item.positionId}`)
+      }
     }
   },
   async mounted() {
     this.portfolio = await axios.get('/api/portfolio')
-      .then(response => response.data)
+      .then(response => {
+        response.data.map(coin => {
+          coin.value = coin.value.toFixed(2)
+          coin.price = Number(coin.price).toFixed(2)
+          this.portfolioValue += Number(coin.value)
+          return coin
+        })
+        return response.data
+      })
     this.coins = await axios.get('/api/coin')
       .then(response => response.data)
   }
