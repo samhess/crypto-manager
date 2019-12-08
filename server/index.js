@@ -34,7 +34,7 @@ app.use(express.json())
 app.use('/api', require('./routes/home'));
 app.use('/api', require('./routes/portfolio'));
 app.use('/api', require('./routes/user'));
-app.use('/api', require('./routes/system'));
+app.use('/api', require('./routes/coin'));
 
 // host GUI as static content
 const root = `${__dirname}/../client/dist`

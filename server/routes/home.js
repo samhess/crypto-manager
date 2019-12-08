@@ -8,24 +8,20 @@ endpoints = [{
     path:'/api',
     methods:'GET'
   },{
-    name:'/api/task',
+    name:'/api/coin',
+    operations:'R coins',
+    path:'/api/coin',
+    methods:'GET, UPDATE'
+  },
+  {
+    name:'/api/portfolio',
     operations:'CRUD tasks',
-    path:'/api/task',
+    path:'/api/portfolio',
     methods:'POST, GET, UPDATE, DELETE'
   },{
-    name:'/api/task/getByUser/:id',
-    operations:'R tasks of a certain user',
-    path:'/api/task/getByUser/1',
-    methods:'GET'
-  },{
-    name:'/api/task/priority',
-    operations:'R priorities of tasks',
-    path:'/api/task/priority',
-    methods:'GET'
-  },,{
-    name:'/api/task/state',
-    operations:'R states of tasks',
-    path:'/api/task/state',
+    name:'/api/portfolio/getByUser/:id',
+    operations:'R positions of a certain user',
+    path:'/api/portfolio/getByUser/1',
     methods:'GET'
   },{
     name:'/api/user',

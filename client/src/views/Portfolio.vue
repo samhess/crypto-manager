@@ -1,7 +1,7 @@
 <template>
   <div class="portfolio">
     <h1>Portfolio</h1>
-    <v-data-table :headers="headers" :items="coins" :items-per-page="10" >
+    <v-data-table :headers="headers" :items="portfolio" :items-per-page="10" >
       <template slot="top">
         <v-dialog v-model="dialog" max-width="500px">
           <template v-slot:activator="{ on }">
@@ -17,7 +17,7 @@
               <v-container>
                 <v-row>
                   <v-col cols="12">
-                    <v-select :items="coin" item-text="symbol" v-model="newItem.symbol" label="Coin"> </v-select>
+                    <v-select :items="coins" item-text="symbol" v-model="newItem.symbol" label="Coin"> </v-select>
                     <v-text-field v-model="newItem.amount" label="Amount"></v-text-field>
                   </v-col>
                 </v-row>
@@ -62,7 +62,8 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'ID', value: 'id'},
+        { text: 'Position', value: 'positionId'},
+        { text: 'Name', value: 'name'},
         { text: 'Symbol', value: 'symbol'},
         { text: 'Amount', value: 'amount'},
         { text: 'Price', value: 'price'},
@@ -74,15 +75,15 @@ export default {
       snackColor: '',
       snackText: '',
       max25chars: v => v.length <= 25 || 'Input too long!',
-      coin: [],
       coins: [],
+      portfolio: [],
     };
   },
   methods: {
     async save (item) {
-      var idx = this.coins.indexOf(item)
-      this.coins[idx].value = item.amount * item.price
-      var res = await axios.put('/api/title', item)
+      var idx = this.portfolio.indexOf(item)
+      this.portfolio[idx].value = item.amount * item.price
+      var res = await axios.put('/api/portfolio', item)
         .then(res => res.data)
         .catch(err => {
           this.snack = true
@@ -96,7 +97,7 @@ export default {
       }
     },
     add () {
-      this.coins.push({
+      this.portfolio.push({
         'id' : null,
         'symbol' :'NEW',
         'amount' : 0,
@@ -109,13 +110,14 @@ export default {
     },
     saveDialog () {
       this.dialog = false
-      axios.post('/api/title', this.newItem)
+      axios.post('/api/portfolio', this.newItem)
         .then(response => {
           var id = response.data
           if (id) {
-                  var coinData = this.coin.find(el => el.symbol === this.newItem.symbol)
-                  this.coins.push({
-                    'id' : id[0],
+                  var coinData = this.coins.find(el => el.symbol === this.newItem.symbol)
+                  this.portfolio.push({
+                    'positionId' : id[0],
+                    'name': coinData.name,
                     'symbol' : this.newItem.symbol,
                     'amount' : this.newItem.amount,
                     'price': coinData.price,
@@ -126,9 +128,9 @@ export default {
     }
   },
   async mounted() {
-    this.coins = await axios.get('/api/title')
+    this.portfolio = await axios.get('/api/portfolio')
       .then(response => response.data)
-    this.coin = await axios.get('/api/coin')
+    this.coins = await axios.get('/api/coin')
       .then(response => response.data)
   }
 }
