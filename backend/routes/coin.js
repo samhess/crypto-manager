@@ -6,7 +6,7 @@ const knex = require('knex')(knexconf)
 const auth = require('../middleware/auth')
 
 router.get('/coin', auth.isLoggedIn, async (req, res) =>{
-  var result = await knex('coins')
+  var result = await knex('coins').orderBy('cmc_rank')
   res.json(result)
 })
 

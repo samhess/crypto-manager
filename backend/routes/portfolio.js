@@ -10,7 +10,7 @@ const auth = require('../middleware/auth')
 router.get('/portfolio', auth.isLoggedIn, async (req, res) =>{
   var result = await knex('portfolio')
         .join('coins', 'portfolio.coinId', '=', 'coins.id')
-        .select('portfolio.id', 'portfolio.amount', 'coins.cmc_rank', 'coins.name' , 'coins.symbol', 'coins.price')
+        .select('portfolio.id', 'portfolio.amount', 'coins.cmc_rank', 'coins.name' , 'coins.symbol', 'coins.price', 'coins.market_cap')
         .orderBy('cmc_rank')
   res.json(result)
 })

@@ -73,6 +73,8 @@ export default {
         { text: 'Amount', value: 'amount', align: 'end',},
         { text: 'Price', value: 'price', align: 'end',},
         { text: 'Value', value: 'value', align: 'end',},
+        { text: 'Market Share', value: 'mshare', align: 'end',},
+        { text: 'Share', value: 'share', align: 'end',},
         { text: 'Action', value: 'action', align: 'center',},
       ],
       dialog: false,
@@ -136,13 +138,19 @@ export default {
   async mounted() {
     this.portfolio = await axios.get('/api/portfolio')
       .then(response => {
-        response.data.map(coin => {
-          coin.value = (Number(coin.amount) * Number(coin.price)).toFixed(2)
-          coin.price = Number(coin.price).toFixed(2)
+        var portfolio = response.data
+        portfolio.map(coin => {
+          coin.value = (Number(coin.amount) * Number(coin.price)).toFixed(0)
           this.portfolioValue += Number(coin.value)
           return coin
         })
-        return response.data
+        portfolio.map(coin => {
+          coin.price = Number(coin.price).toFixed(2)
+          coin.mshare = (Number(coin.market_cap) / 357000000000 * 100).toFixed(2) + '%'
+          coin.share = (100 * coin.value / this.portfolioValue).toFixed(2) + '%'
+          return coin
+        })
+        return portfolio
       })
     this.coins = await axios.get('/api/coin')
       .then(response => response.data)

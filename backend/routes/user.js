@@ -1,12 +1,12 @@
 // routes/user.js
 const express = require('express')
 const user = express.Router()
-const knexconf = require('../knexconf')
+const knexconf = require('../database/knexfile')[process.env.NODE_ENV]
 const knex = require('knex')(knexconf)
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const auth = require('../middleware/auth')
-const jwtSecret = "SECRETKEY"
+const jwtSecret = process.env.JWT_SECRET
 
 // read user
 user.get('/user', auth.isLoggedIn, async (req, res) =>{
