@@ -37,7 +37,7 @@
       </v-btn>
     </v-app-bar>
 
-    <v-content>
+    <v-main>
       <v-container>
         <div align="center" id="nav">
           <router-link to="/">Home</router-link> |
@@ -47,7 +47,7 @@
           <router-view :isAuth="isAuth" :user="user"/>
         </v-row>  
       </v-container>
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 
