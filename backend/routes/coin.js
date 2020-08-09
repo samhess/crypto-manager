@@ -1,12 +1,12 @@
 // routes/task.js
 const express = require('express');
 const router = express.Router();
-const knexconf = require('../knexconf')
+const knexconf = require('../database/knexfile')['development']
 const knex = require('knex')(knexconf)
 const auth = require('../middleware/auth')
 
 router.get('/coin', auth.isLoggedIn, async (req, res) =>{
-  var result = await knex('coin')
+  var result = await knex('coins')
   res.json(result)
 })
 
@@ -38,7 +38,7 @@ router.get('/coin/update', auth.isLoggedIn, async (req, res) =>{
         'percent_change_7d': element.quote.USD.percent_change_7d,
         'market_cap': element.quote.USD.market_cap,
       }
-      knex('coin').update(coin)
+      knex('coins').update(coin)
         .where('symbol',element.symbol)
         .then(result => {
           if (result === 0) {
@@ -46,7 +46,7 @@ router.get('/coin/update', auth.isLoggedIn, async (req, res) =>{
             coin.symbol = element.symbol
             coin.name = element.name
             coin.slug = element.slug
-            knex('coin').insert(coin).catch(err => {
+            knex('coins').insert(coin).catch(err => {
               console.log(err)
             })
           }

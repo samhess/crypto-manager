@@ -45,10 +45,10 @@ app.use(fallback('index.html', { root }))
 app.listen(port, console.log("Serving GUI at web root and API at /api on localhost port " + port))
 
 // test db connection
-const knexconf = require('./knexconf')
+const knexconf = require('./database/knexfile')['development']
 const knex = require('knex')(knexconf)
 knex.raw("SELECT VERSION();").then(function(res){
-  console.log('Sucessfully conneted to ' + knexconf.client + ' database at ' + knexconf.connection.split('@')[1])
+  console.log('Sucessfully conneted to ' + knexconf.connection.database + ' database')
 }).catch(function(err) {
   console.error(err.stack);
 })
