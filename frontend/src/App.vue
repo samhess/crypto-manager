@@ -39,13 +39,8 @@
 
     <v-main>
       <v-container>
-        <div align="center" id="nav">
-          <router-link to="/">Home</router-link> |
-          <router-link to="/portfolio">Portfolio</router-link>
-        </div>
-        <v-row align="center" justify="center" style="margin-top:20px;">
+          <Menu/>
           <router-view :isAuth="isAuth" :user="user"/>
-        </v-row>  
       </v-container>
     </v-main>
   </v-app>
@@ -53,12 +48,13 @@
 
 <script>
 // import HelloWorld from './components/HelloWorld';
+import Menu from './components/Menu';
 
 export default {
   name: 'App',
 
   components: {
-    // HelloWorld,
+    Menu,
   },
 
   data: () => ({

@@ -32,7 +32,7 @@ router.put('/portfolio', auth.isLoggedIn, async (req, res) =>{
   var result = await knex('portfolio')
                   .update(
                     'amount', req.body.amount
-                  ).where('positionId',req.body.positionId)
+                  ).where('id',req.body.id)
   res.json(result)
 })
 

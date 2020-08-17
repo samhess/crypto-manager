@@ -11,7 +11,7 @@ exports.seed = async function(knex) {
       axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', { 
         params: {
           'start': '1',
-          'limit': '500',
+          'limit': '1000',
           'convert': 'USD'
         },
         headers: {
@@ -41,6 +41,6 @@ exports.seed = async function(knex) {
             })
         })
       })
-      await sleep(3000)
+      await sleep(5000)
     });
 }

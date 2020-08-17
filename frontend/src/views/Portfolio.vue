@@ -1,6 +1,8 @@
 <template>
   <div class="portfolio">
-    <h1>Portfolio {{portfolioValue.toFixed(0)}} USD</h1>
+    <h1>Portfolio</h1>
+    <p>Value: {{portfolioValue.toFixed(0)}} USD</p>
+    <v-btn color="primary" dark @click="updatePrices">Update Prices</v-btn>
     <v-data-table :headers="headers" :items="portfolio" :items-per-page="10" >
       <!-- table top -->
       <template slot="top">
@@ -12,14 +14,14 @@
           </template>
           <v-card>
             <v-card-title>
-              <span class="headline">Add coin</span>
+              <span class="headline">{{formTitle}}</span>
             </v-card-title>
             <v-card-text>
               <v-container>
                 <v-row>
                   <v-col cols="12">
-                    <v-select :items="coins" item-text="symbol" v-model="newItem.symbol" label="Coin"> </v-select>
-                    <v-text-field v-model="newItem.amount" label="Amount"></v-text-field>
+                    <v-select :items="coins" item-text="symbol" v-model="editedItem.symbol" label="Coin"> </v-select>
+                    <v-text-field v-model="editedItem.amount" label="Amount"></v-text-field>
                   </v-col>
                 </v-row>
               </v-container>
@@ -33,10 +35,11 @@
         </v-dialog>
       </template>
       <!-- the actual data table -->
-      <template v-slot:item.action="props">
+      <template v-slot:[`item.action`]="props">
+        <v-icon small @click="editItem(props.item)">mdi-pencil</v-icon>&nbsp;
         <v-icon small @click="deleteItem(props.item)">mdi-delete</v-icon>
       </template>
-      <template v-slot:item.amount="props">
+      <template v-slot:[`item.amount`]="props">
         <v-edit-dialog
           :return-value.sync="props.item.amount"
           @save="save(props.item)"
@@ -75,10 +78,11 @@ export default {
         { text: 'Value', value: 'value', align: 'end',},
         { text: 'Market Share', value: 'mshare', align: 'end',},
         { text: 'Share', value: 'share', align: 'end',},
-        { text: 'Action', value: 'action', align: 'center',},
+        { text: 'Action', value: 'action', align: 'end',},
       ],
       dialog: false,
-      newItem: {},
+      editedItem : {},
+      editedIndex : -1,
       snack: false,
       snackColor: '',
       snackText: '',
@@ -89,6 +93,10 @@ export default {
     };
   },
   methods: {
+    async updatePrices() {
+      await axios.get('/api/coin/update')
+        .then(res => console.log(res.data))
+    },
     async save (item) {
       var idx = this.portfolio.indexOf(item)
       this.portfolio[idx].value = item.amount * item.price
@@ -110,22 +118,28 @@ export default {
     },
     saveDialog () {
       this.dialog = false
-      axios.post('/api/portfolio', this.newItem)
+      console.log(this.editedItem)
+      axios.post('/api/portfolio', this.editedItem)
         .then(response => {
           var id = response.data[0]
           if (id) {
-            var coinData = this.coins.find(el => el.symbol === this.newItem.symbol)
+            var coinData = this.coins.find(el => el.symbol === this.editedItem.symbol)
             this.portfolio.push({
               'positionId' : id,
               'cmc_rank' : coinData.cmc_rank,
               'name': coinData.name,
-              'symbol' : this.newItem.symbol,
-              'amount' : this.newItem.amount,
+              'symbol' : this.editedItem.symbol,
+              'amount' : this.editedItem.amount,
               'price': coinData.price,
-              'value': this.newItem.amount * coinData.price
+              'value': this.editedItem.amount * coinData.price
             })
           }
         })
+    },
+    editItem (item) {
+        this.editedIndex = this.portfolio.indexOf(item)
+        this.editedItem = Object.assign({}, item)
+        this.dialog = true
     },
     deleteItem(item) {
       var index = this.portfolio.indexOf(item)
@@ -134,6 +148,11 @@ export default {
         axios.delete(`/api/portfolio/${item.id}`)
       }
     }
+  },
+  computed: {
+    formTitle () {
+      return this.editedIndex === -1 ? 'New Item' : 'Edit Item'
+    },
   },
   async mounted() {
     this.portfolio = await axios.get('/api/portfolio')
@@ -146,7 +165,7 @@ export default {
         })
         portfolio.map(coin => {
           coin.price = Number(coin.price).toFixed(2)
-          coin.mshare = (Number(coin.market_cap) / 357000000000 * 100).toFixed(2) + '%'
+          coin.mshare = (Number(coin.market_cap) / 380838000000 * 100).toFixed(2) + '%'
           coin.share = (100 * coin.value / this.portfolioValue).toFixed(2) + '%'
           return coin
         })
