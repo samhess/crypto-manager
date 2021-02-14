@@ -4,6 +4,7 @@ const router = express.Router();
 const knexconf = require('../database/knexfile')['development']
 const knex = require('knex')(knexconf)
 const auth = require('../middleware/auth')
+const rp = require('request-promise')
 
 router.get('/coin', auth.isLoggedIn, async (req, res) =>{
   var result = await knex('coins').orderBy('cmc_rank')
@@ -11,7 +12,6 @@ router.get('/coin', auth.isLoggedIn, async (req, res) =>{
 })
 
 router.get('/coin/update', auth.isLoggedIn, async (req, res) =>{
-  const rp = require('request-promise');
   const requestOptions = {
     method: 'GET',
     uri: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
@@ -27,7 +27,7 @@ router.get('/coin/update', auth.isLoggedIn, async (req, res) =>{
     gzip: true
   };
   rp(requestOptions).then(response => {
-    // console.log('API call response:', response);
+    console.log(response.data);
     response.data.forEach((element,index) => {
       var coin = {
         'cmc_rank': element.cmc_rank,
@@ -60,6 +60,26 @@ router.get('/coin/update', auth.isLoggedIn, async (req, res) =>{
     console.log('API call error:', err.message);
   });
 })
+
+router.get('/coin/market/update', auth.isLoggedIn, async (req, res) =>{
+  const requestOptions = {
+    method: 'GET',
+    uri: 'https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest',
+    headers: {
+      'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'
+    },
+    json: true
+  };
+  rp(requestOptions)
+    .then(response => {
+      console.log(response.data);
+      res.json(response.data)
+    })
+    .catch((err) => {
+      console.log('API call error :', err.message);
+    });
+})
+
 
 
 module.exports = router;
