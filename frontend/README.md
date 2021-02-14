@@ -1,4 +1,4 @@
-# manager
+# frontend
 
 ## Project setup
 ```
