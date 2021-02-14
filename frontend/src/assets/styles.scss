@@ -1,0 +1,32 @@
+// Variables
+$blue:    #0082b4; // TF Bern blue
+$indigo:  #6610f2;
+$purple:  #6f42c1;
+$pink:    #d63384;
+$red:     #dc3545;
+$orange:  #fd7e14;
+$yellow:  #ffc107;
+$green:   #198754;
+$teal:    #20c997;
+$cyan:    #0dcaf0;
+
+body {
+  padding-top: 6rem;
+}
+h1,h2,h3,h4,h5,h6 {
+ color: $blue;
+}
+dialog {
+  width: 40%;
+  border-color: $blue;
+  border-width: 2px;
+}
+.navigation a {
+  font-weight: bolder;
+  color: white;
+}
+.navigation a.router-link-active {
+  color: #111;
+}
+
+@import '~bootstrap/scss/bootstrap.scss'
