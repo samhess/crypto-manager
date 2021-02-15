@@ -1,6 +1,6 @@
 <template>
   <div>
-    <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-md navbar-dark bg-secondary fixed-top">
       <div class="container-fluid justify-content-between">
         <div class="align-middle">
           <router-link class="ms-2 align-middle" to="/">

@@ -1,5 +1,5 @@
 // Variables
-$blue:    #0082b4; // TF Bern blue
+$blue:    #0d6efd;
 $indigo:  #6610f2;
 $purple:  #6f42c1;
 $pink:    #d63384;
@@ -14,11 +14,11 @@ body {
   padding-top: 6rem;
 }
 h1,h2,h3,h4,h5,h6 {
- color: $blue;
+ color: $green;
 }
 dialog {
   width: 40%;
-  border-color: $blue;
+  border-color: $green;
   border-width: 2px;
 }
 .navigation a {

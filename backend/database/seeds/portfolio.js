@@ -20,6 +20,8 @@ exports.seed = function(knex) {
           for (i=0; i < values.length; i++) {
             coin[headers[i]] = values[i]
           }
+          if (coin.Symbol === 'DOT2') coin.Symbol = 'DOT'
+          if (coin.Symbol === 'UNI2') coin.Symbol = 'UNI'
           if (coin.Symbol === 'ONE2') coin.Symbol = 'ONE'
           if (coin.Symbol === 'ATOM2') coin.Symbol = 'ATOM'
           knex('coins').where('symbol',coin.Symbol).then(results => {

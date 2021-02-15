@@ -29,7 +29,7 @@ app.use(express.json())
 // add routes
 app.use('/api', require('./routes/coin'));
 app.use('/api', require('./routes/user'));
-app.use('/api', require('./routes/portfolio'));
+app.use('/api/portfolio', require('./routes/portfolio'));
 
 // serve GUI as static content (index.html)
 app.use(express.static(`${__dirname}/../frontend/dist`))

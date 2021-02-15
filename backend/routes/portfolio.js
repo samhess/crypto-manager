@@ -1,48 +1,49 @@
-// routes/task.js
 const express = require('express');
 const router = express.Router();
 const knexconf = require('../database/knexfile')['development']
 const knex = require('knex')(knexconf)
-const auth = require('../middleware/auth')
-
 
 // read all positions
-router.get('/portfolio', auth.isLoggedIn, async (req, res) =>{
+router.get('/', async (req, res) =>{
   var result = await knex('portfolio')
-        .join('coins', 'portfolio.coinId', '=', 'coins.id')
-        .select('portfolio.id', 'portfolio.amount', 'coins.cmc_rank', 'coins.name' , 'coins.symbol', 'coins.price', 'coins.market_cap')
-        .orderBy('cmc_rank')
+    .select('portfolio.id', 
+      'portfolio.amount', 
+      'coins.cmc_rank', 
+      'coins.name' , 
+      'coins.symbol', 
+      'coins.price', 
+      knex.raw('portfolio.amount * coins.price as val'),
+      'coins.market_cap')
+    .join('coins', 'portfolio.coinId', 'coins.id')
+    .orderBy('cmc_rank')
+    .select()
   res.json(result)
 })
 
 // add a position
-router.post('/portfolio', auth.isLoggedIn, async (req, res) =>{
-  var coin = await knex('coins').where('symbol',req.body.symbol)
+router.post('/add', async (req, res) =>{
+  console.log(req.body);
+  var coin = await knex('coins').where('symbol',req.body.symbol).first()
   var result = await knex('portfolio')
-                  .insert({
-                    'amount': req.body.amount,
-                    'coinId': coin[0].id,
-                    'userId': 1
-                  })
+    .insert({'amount': req.body.amount,'coinId': coin.id,'userId': 1})
   res.json(result)
 })
 
-// change a position
-router.put('/portfolio', auth.isLoggedIn, async (req, res) =>{
+// edit a position
+router.put('/edit', async (req, res) =>{
+  let coin = req.body
   var result = await knex('portfolio')
-                  .update(
-                    'amount', req.body.amount
-                  ).where('id',req.body.id)
+    .update('amount', coin.amount)
+    .where('id',coin.id)
   res.json(result)
 })
 
 // delete a position
-router.delete('/portfolio/:positionId', auth.isLoggedIn, async (req, res) =>{
+router.delete('/delete/:id', async (req, res) =>{
   var results = await knex('portfolio')
-                      .where('id', req.params.positionId)
-                      .del()
+    .del()
+    .where('id', req.params.id)
   res.json(results)
 })
 
-
-module.exports = router;
+module.exports = router
