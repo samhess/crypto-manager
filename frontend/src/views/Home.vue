@@ -1,6 +1,9 @@
 <template>
   <div class="home">
     <h1>Welcome to Crypto Manager!</h1>
+    <div class="alert alert-primary text-center" role="alert">
+      Market Cap: {{marketCap}} USD
+    </div>
     <div class="d-flex justify-content-end mb-2">
       <button class="btn btn-primary text-white me-2" @click="updatePrices">Update Market Data</button>
     </div>
@@ -27,7 +30,7 @@
   </div>
 </template>
 <script>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 export default {
   name: 'home',
   props: ['user'],
@@ -44,14 +47,14 @@ export default {
     ])
     const coins = reactive([])
     const marketGlobals = {}
+    var marketCap = ref(0)
 
     async function updatePrices() {
       await fetch('/api/coin/update')
       getCoins()
     }
     
-    function getColor(val) {
-      var change = parseFloat(val)
+    function getColor(change) {
       return (change <= 0) ? 'text-danger' : 'text-success'
     }
 
@@ -59,6 +62,7 @@ export default {
       let response = await fetch('/api/coin/market/update')
       let data = await response.json()
       Object.assign(marketGlobals,data)
+      marketCap.value = Number((marketGlobals.quote.USD.total_market_cap).toFixed(0)).toLocaleString('de-CH')
       getCoins()
     }
 
@@ -79,6 +83,7 @@ export default {
     return {
       headers,
       coins,
+      marketCap,
       updatePrices,
       getColor
     }

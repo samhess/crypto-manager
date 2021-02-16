@@ -30,7 +30,7 @@
       </table>
       <menu class="d-flex justify-content-end pt-2 mb-1">
         <button class="btn btn-secondary text-white" @click="closeDialog('preview')">Abbrechen</button>&nbsp;
-        <button class="btn btn-primary text-white" @click="finalizeImport" autofocus>{{entities[selectedEntity].name}} importieren</button>
+        <button class="btn btn-primary text-white" @click="finalizeImport">{{entities[selectedEntity].name}} importieren</button>
       </menu>
     </dialog>
   </div>
