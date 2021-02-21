@@ -1,80 +1,67 @@
 const express = require('express');
 const router = express.Router();
-const knexconf = require('../database/knexfile')['development']
+const knexconf = require('../db/knexfile')['development']
 const knex = require('knex')(knexconf)
-const auth = require('../middleware/auth')
-const rp = require('request-promise')
+const fetch = require('node-fetch')
 
 router.get('/coin', async (req, res) =>{
-  var result = await knex('coins').orderBy('cmc_rank')
+  var result = await knex('coins').orderBy('ranking')
   res.json(result)
 })
 
 router.get('/coin/update', async (req, res) =>{
-  const requestOptions = {
-    method: 'GET',
-    uri: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
-    qs: {
-      'start': '1',
-      'limit': '500',
-      'convert': 'USD'
-    },
-    headers: {
-      'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'
-    },
-    json: true,
-    gzip: true
-  };
-  rp(requestOptions).then(response => {
-    response.data.forEach((element,index) => {
-      let coin = {
-        'cmc_rank': element.cmc_rank,
-        'price': element.quote.USD.price,
-        'volume24h': element.quote.USD.volume_24h,
-        'percent_change_1h': element.quote.USD.percent_change_1h,
-        'percent_change_24h': element.quote.USD.percent_change_24h,
-        'percent_change_7d': element.quote.USD.percent_change_7d,
-        'market_cap': element.quote.USD.market_cap,
-      }
-      knex('coins').update(coin)
-        .where('symbol',element.symbol)
-        .then(result => {
-          if (result === 0) {
-            console.log('inserting: ', element.symbol);
-            coin.symbol = element.symbol
-            coin.name = element.name
-            coin.slug = element.slug
-            knex('coins').insert(coin).catch(err => {
-              console.log(err)
-            })
-          }
-        })
-        .catch(err => {
-        })
-      // console.log('Coin:', index, element);
-    });
-    res.json(response.data)
-  }).catch((err) => {
-    console.log('API call error:', err.message);
-  });
+  let url = new URL('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest')
+  url.search = new URLSearchParams({start:1, limit:100, convert:'USD'})
+  let response = await fetch(url, {headers:{'X-CMC_PRO_API_KEY':'537aff70-7beb-4491-ae8e-852501fc9259'}})
+  let data = await response.json()
+  let coins = data.data.map(coin => {
+    return {
+      'id' : coin.id,
+      'symbol' : coin.symbol,
+      'name' : coin.name,
+      'slug' : coin.slug,
+      'ranking': coin.cmc_rank,
+      'price': coin.quote.USD.price,
+      'volume24h': coin.quote.USD.volume_24h,
+      'change1h': coin.quote.USD.percent_change_1h,
+      'change24h': coin.quote.USD.percent_change_24h,
+      'change7d': coin.quote.USD.percent_change_7d,
+      'marketCap': coin.quote.USD.market_cap,
+    }
+  })
+  let columns = Object.keys(coins[0]).join(',')
+  let values = coins.reduce((acc, current) => {
+    let values = Object.values(current).map(x => `'${x}'`).join(',')
+    return acc + `(${values}),`
+  }, '')
+  values = values.slice(0,-1)
+  knex.raw(`
+    INSERT INTO coins (${columns})
+    VALUES ${values} ON DUPLICATE KEY UPDATE 
+    name=VALUES(name),
+    slug=VALUES(slug),
+    ranking=VALUES(ranking),
+    price=VALUES(price),
+    volume24h=VALUES(volume24h),
+    change1h=VALUES(change1h),
+    change24h=VALUES(change24h),
+    change7d=VALUES(change7d),
+    marketCap=VALUES(marketCap)
+  `)
+  .catch((err) => {
+    console.log('UPSERT error:', err.message);
+  })
+  .then(() => console.log('UPSERT done'))
 })
 
 router.get('/coin/market/update', async (req, res) =>{
-  const requestOptions = {
-    method: 'GET',
-    uri: 'https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest',
-    headers: {
-      'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'
-    },
-    json: true
-  };
-  rp(requestOptions)
-    .then(response => {
-      res.json(response.data)
-    })
+  let url = new URL('https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest')
+  let response = await fetch(url, {headers : {'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'}})
     .catch((err) => {
       console.log('API call error :', err.message);
-    });
+    })
+  let data = await response.json()
+  res.json(data.data)
 })
 
 module.exports = router

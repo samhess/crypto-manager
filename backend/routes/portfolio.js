@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const knexconf = require('../database/knexfile')['development']
+const knexconf = require('../db/knexfile')['development']
 const knex = require('knex')(knexconf)
 
 // read all positions
@@ -8,14 +8,15 @@ router.get('/', async (req, res) =>{
   var result = await knex('portfolio')
     .select('portfolio.id', 
       'portfolio.amount', 
-      'coins.cmc_rank', 
+      'coins.ranking', 
       'coins.name' , 
       'coins.symbol', 
       'coins.price', 
-      knex.raw('portfolio.amount * coins.price as val'),
-      'coins.market_cap')
+      // portfolio.amount * coins.price AS val
+      knex.raw('?? * ?? as val', ['portfolio.amount','coins.price']),  
+      'coins.marketCap')
     .join('coins', 'portfolio.coinId', 'coins.id')
-    .orderBy('cmc_rank')
+    .orderBy('ranking')
     .select()
   res.json(result)
 })

@@ -1,7 +1,7 @@
 // routes/user.js
 const express = require('express')
 const user = express.Router()
-const knexconf = require('../database/knexfile')[process.env.NODE_ENV]
+const knexconf = require('../db/knexfile')[process.env.NODE_ENV]
 const knex = require('knex')(knexconf)
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')

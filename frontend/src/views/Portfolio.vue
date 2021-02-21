@@ -26,8 +26,8 @@
           <td class="text-end">{{coin.amount}}</td>
           <td class="text-end">{{coin.price.toLocaleString('de-CH', {style:'currency', currency:'USD'})}}</td>
           <td class="text-end">{{coin.val.toLocaleString('de-CH', {style:'currency', currency:'USD'})}}</td>
-          <td class="text-end">{{coin.mshare.toFixed(1) +'%'}}</td>
-          <td class="text-end">{{coin.share.toFixed(1) +'%'}}</td>
+          <td class="text-end">{{coin.mshare.toFixed(2) +'%'}}</td>
+          <td class="text-end">{{coin.share.toFixed(2) +'%'}}</td>
           <td class="text-end">
             <button class="btn btn-primary text-white me-2" @click="editItem(coin)">Edit</button>
             <button class="btn btn-danger text-white" @click="deleteItem(coin)">Delete</button>

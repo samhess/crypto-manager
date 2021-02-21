@@ -5,7 +5,7 @@
       Market Cap: {{marketCap}} USD
     </div>
     <div class="d-flex justify-content-end mb-2">
-      <button class="btn btn-primary text-white me-2" @click="updatePrices">Update Market Data</button>
+      <button class="btn btn-primary text-white me-2" @click="updatePrices">Update</button>
     </div>
     <table class="table">
       <caption>Coin Market</caption>
@@ -16,13 +16,13 @@
       </thead>
       <tbody>
         <tr v-for="coin in coins" :key="coin">
-          <td>{{coin.cmc_rank}}</td>
+          <td>{{coin.ranking}}</td>
           <td>{{coin.name}}</td>
           <td>{{coin.symbol}}</td>
           <td>{{coin.price}}</td>
-          <td :class="getColor(coin.percent_change_1h)">{{coin.percent_change_1h+'%'}}</td>
-          <td :class="getColor(coin.percent_change_24h)">{{coin.percent_change_24h+'%'}}</td>
-          <td :class="getColor(coin.percent_change_7d)">{{coin.percent_change_7d+'%'}}</td>
+          <td :class="getColor(coin.change1h)">{{coin.change1h+'%'}}</td>
+          <td :class="getColor(coin.change24h)">{{coin.change24h+'%'}}</td>
+          <td :class="getColor(coin.change7d)">{{coin.change7d+'%'}}</td>
           <td>{{coin.share.toFixed(2) + '%'}}</td>
         </tr>
       </tbody>
@@ -36,13 +36,13 @@ export default {
   props: ['user'],
   setup() {
     const headers = reactive([
-      { text: 'Rank', value: 'cmc_rank'},
+      { text: 'Rank', value: 'ranking'},
       { text: 'Name', value: 'name'},
       { text: 'Symbol', value: 'symbol'},
       { text: 'Price', value: 'price'},
-      { text: 'Change 1h', value: 'percent_change_1h'},
-      { text: 'Change 24h', value: 'percent_change_24h'},
-      { text: 'Change 7d', value: 'percent_change_7d'},
+      { text: 'Change 1h', value: 'change1h'},
+      { text: 'Change 24h', value: 'change24h'},
+      { text: 'Change 7d', value: 'change7d'},
       { text: 'Share', value: 'share'}
     ])
     const coins = reactive([])
@@ -73,7 +73,7 @@ export default {
       coins.push(...data)
       let marketCap = marketGlobals.quote.USD.total_market_cap
       coins.map(coin => {
-        coin.share = 100 * coin.market_cap / marketCap
+        coin.share = 100 * coin.marketCap / marketCap
         return coin
       })
     }
