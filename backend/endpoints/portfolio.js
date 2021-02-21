@@ -57,16 +57,16 @@ router.delete('/delete', async (req, res) => {
 router.post('/import', async (req, res) => {
   let positions = req.body
   positions.map(coin => {
-    if (coin.Symbol === 'DOT2') coin.Symbol = 'DOT'
-    if (coin.Symbol === 'UNI2') coin.Symbol = 'UNI'
-    if (coin.Symbol === 'ONE2') coin.Symbol = 'ONE'
-    if (coin.Symbol === 'ATOM2') coin.Symbol = 'ATOM'
+    if (coin.Ticker === 'DOT2') coin.Ticker = 'DOT'
+    if (coin.Ticker === 'UNI2') coin.Ticker = 'UNI'
+    if (coin.Ticker === 'ONE2') coin.Ticker = 'ONE'
+    if (coin.Ticker === 'ATOM2') coin.Ticker = 'ATOM'
     return coin
   })
-  let symbols = positions.map(coin => coin.Symbol)
+  let symbols = positions.map(coin => coin.Ticker)
   let coinList = await knex('coins').select('id','symbol').whereIn('symbol', symbols)
   let records = positions.map(coin => {
-    let foundCoin = coinList.find(item => item.symbol === coin.Symbol)
+    let foundCoin = coinList.find(item => item.symbol === coin.Ticker)
     if (foundCoin) {
       return {
         amount: parseFloat(coin.Anzahl),
@@ -74,7 +74,7 @@ router.post('/import', async (req, res) => {
         userId: 1
       }
     } else {
-      console.log(`Cannot import ${coin.Symbol}`)
+      console.log(`Cannot import ${coin.Ticker}`)
       return undefined
     }
   })

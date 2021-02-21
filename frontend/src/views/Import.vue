@@ -38,6 +38,7 @@
 
 <script>
 import { reactive, ref } from 'vue'
+import router from '../router'
 import { openDialog, closeDialog } from '../lib/utils'
 import headers from '../lib/auth'
 
@@ -91,6 +92,7 @@ export default {
       let index = await response.json()
       console.log(`Insert successful at id ${index}`)
       closeDialog('preview')
+      router.push('/portfolio')
     }
     
     return {
