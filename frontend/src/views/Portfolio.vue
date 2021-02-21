@@ -5,7 +5,8 @@
       Portfolio Value: {{Number((portfolio.value).toFixed(1)).toLocaleString('de-CH')}} USD
     </div>
     <div class="d-flex justify-content-end mb-2">
-      <button class="btn btn-primary text-white" @click="editItem()">Add Coin</button>
+      <button class="btn btn-primary text-white me-2" @click="editItem()">Add coin</button>
+      <button class="btn btn-danger text-white" @click="deleteItem('all')">Delete all</button>
     </div>
     <table class="table">
       <caption>Portfolio</caption>
@@ -20,7 +21,7 @@
       </thead>
       <tbody>
         <tr v-for="coin in portfolio.coins" :key="coin.symbol">
-          <td>{{coin.cmc_rank}}</td>
+          <td>{{coin.ranking}}</td>
           <td>{{coin.name}}</td>
           <td>{{coin.symbol}}</td>
           <td class="text-end">{{coin.amount}}</td>
@@ -65,7 +66,7 @@ export default {
       coins : [],
       value : 0,
       headers : [
-        { text: 'Rank', value: 'cmc_rank'},
+        { text: 'Rank', value: 'ranking'},
         { text: 'Name', value: 'name'},
         { text: 'Symbol', value: 'symbol'},
         { text: 'Amount', value: 'amount'},
@@ -106,10 +107,16 @@ export default {
     }
     
     async function deleteItem(item) {
-      if (confirm('Are you sure you want to delete your ' + item.symbol + ' position?')) {
-        await fetch(`/api/portfolio/delete/${item.id}`, {method:'DELETE'})
-        getPortfolio()
+      if (item === 'all') {
+        if (confirm('Are you sure you want to delete all your positions?')) {
+          await fetch(`/api/portfolio/delete`, {method:'DELETE'})
+        }
+      } else {
+        if (confirm('Are you sure you want to delete your ' + item.symbol + ' position?')) {
+          await fetch(`/api/portfolio/delete/${item.id}`, {method:'DELETE'})
+        }
       }
+      getPortfolio()
     }
 
     async function getMarketGlobals() {
@@ -127,7 +134,7 @@ export default {
       // add properties market share and portfolio share to each coin
       portfolio.coins.map(coin => {
         let marketCap = marketGlobals.quote.USD.total_market_cap
-        coin.mshare = 100 * coin.market_cap / marketCap
+        coin.mshare = 100 * coin.marketCap / marketCap
         coin.share = 100 * coin.val / portfolio.value
         return coin
       })

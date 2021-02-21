@@ -52,7 +52,7 @@ export default {
     const csvData = ref()
     const selectedEntity = ref(0)
     const entities = [
-      {id:0, endpoint:'coins', name:'Coins'}
+      {id:0, endpoint:'portfolio', name:'Portfolio'}
     ]
     const jsonData = reactive([{}])
 
@@ -70,7 +70,7 @@ export default {
             let values = row.split(',')
             let item = {}
             values.forEach((value,index) => {
-              item[headers[index]] = value
+              item[headers[index].replace(/"/g,'')] = value.replace(/"/g,'')
             })
             jsonData.push(item)
           })
@@ -106,3 +106,8 @@ export default {
   },
 }
 </script>
+<style scoped>
+dialog {
+  width: 90%;
+}
+</style>

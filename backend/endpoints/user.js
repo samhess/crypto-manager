@@ -1,4 +1,3 @@
-// routes/user.js
 const express = require('express')
 const user = express.Router()
 const knexconf = require('../db/knexfile')[process.env.NODE_ENV]

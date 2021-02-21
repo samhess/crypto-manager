@@ -3,16 +3,32 @@ const router = express.Router();
 const knexconf = require('../db/knexfile')['development']
 const knex = require('knex')(knexconf)
 const fetch = require('node-fetch')
+const cmc = {
+  api : 'https://pro-api.coinmarketcap.com/v1',
+  headers : {'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'},
+  limit: 500,
+  currency : 'USD'
+}
 
-router.get('/coin', async (req, res) =>{
+router.get('/', async (req, res) =>{
   var result = await knex('coins').orderBy('ranking')
   res.json(result)
 })
 
-router.get('/coin/update', async (req, res) =>{
-  let url = new URL('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest')
-  url.search = new URLSearchParams({start:1, limit:100, convert:'USD'})
-  let response = await fetch(url, {headers:{'X-CMC_PRO_API_KEY':'537aff70-7beb-4491-ae8e-852501fc9259'}})
+router.get('/market/update', async (req, res) =>{
+  let url = new URL(`${cmc.api}/global-metrics/quotes/latest`)
+  let response = await fetch(url, {headers: cmc.headers})
+    .catch((err) => {
+      console.log('API call error :', err.message);
+    })
+  let data = await response.json()
+  res.json(data.data)
+})
+
+router.get('/update', async (req, res) => {
+  let url = new URL(`${cmc.api}/cryptocurrency/listings/latest`)
+  url.search = new URLSearchParams({start:1, limit:cmc.limit, convert:cmc.currency})
+  let response = await fetch(url, {headers: cmc.headers})
   let data = await response.json()
   let coins = data.data.map(coin => {
     return {
@@ -29,39 +45,20 @@ router.get('/coin/update', async (req, res) =>{
       'marketCap': coin.quote.USD.market_cap,
     }
   })
-  let columns = Object.keys(coins[0]).join(',')
-  let values = coins.reduce((acc, current) => {
-    let values = Object.values(current).map(x => `'${x}'`).join(',')
-    return acc + `(${values}),`
+  let keys = Object.keys(coins[0])
+  let columns = keys.join()
+  let values = coins.reduce((accumulator, current, index, coins) => {
+    let values = Object.values(current).map(x => `'${x}'`).join()
+    values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
+    return accumulator + values
   }, '')
-  values = values.slice(0,-1)
-  knex.raw(`
-    INSERT INTO coins (${columns})
-    VALUES ${values} ON DUPLICATE KEY UPDATE 
-    name=VALUES(name),
-    slug=VALUES(slug),
-    ranking=VALUES(ranking),
-    price=VALUES(price),
-    volume24h=VALUES(volume24h),
-    change1h=VALUES(change1h),
-    change24h=VALUES(change24h),
-    change7d=VALUES(change7d),
-    marketCap=VALUES(marketCap)
-  `)
-  .catch((err) => {
-    console.log('UPSERT error:', err.message);
-  })
-  .then(() => console.log('UPSERT done'))
-})
+  let updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
 
-router.get('/coin/market/update', async (req, res) =>{
-  let url = new URL('https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest')
-  let response = await fetch(url, {headers : {'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'}})
+  knex.raw(`INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates}`)
     .catch((err) => {
-      console.log('API call error :', err.message);
+      console.log('UPSERT error:', err.message)
     })
-  let data = await response.json()
-  res.json(data.data)
+    .then(() => console.log('UPSERT done'))
 })
 
 module.exports = router
