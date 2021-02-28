@@ -7,7 +7,7 @@ const fetch = require('node-fetch')
 const cmc = {
   api : 'https://pro-api.coinmarketcap.com/v1',
   headers : {'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'},
-  limit: 2,
+  limit: 500,
   currency : 'USD'
 }
 
@@ -60,13 +60,15 @@ router.get('/update', async (req, res) => {
       values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
       return accumulator + values
     }, '')
-    let updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
-    updates = keys.slice(2).map(key => `${key}=excluded.${key}`).join()
-
-    let command = `INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates};`
-    if (knexconf.client === 'postgres') {
-      command = `INSERT INTO coins (${columns}) VALUES ${values} ON CONFLICT (id) DO UPDATE SET ${updates}`
+    let updates, command
+    if (knexconf.client === 'mysql') {
+      updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
+      command = `INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates};`
     }
+    else if (knexconf.client === 'postgres') {
+      updates = keys.slice(2).map(key => `${key}=excluded.${key}`).join()
+      command = `INSERT INTO coins (${columns}) VALUES ${values} ON CONFLICT (id) DO UPDATE SET ${updates}`
+    } 
     let result = knex.raw(command)
       .then(() => {
         console.log('UPSERT done')

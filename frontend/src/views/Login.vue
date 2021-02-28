@@ -2,6 +2,7 @@
   <div>
     <div class="mx-auto" style="width: 60%;">
       <h1>Login</h1>
+      <p>Demo user: demo/pass</p>
       <form @submit.prevent name="login" class="row g-3" novalidate>
         <div class="mb-2">
           <label class="form-label" for="username">Benutzername</label>
