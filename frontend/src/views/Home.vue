@@ -4,9 +4,10 @@
     <div class="alert alert-primary text-center" role="alert">
       Market Cap: {{marketCap}} USD
     </div>
+    <!--
     <div class="d-flex justify-content-end mb-2">
       <button class="btn btn-primary text-white me-2" @click="updatePrices">Update</button>
-    </div>
+    </div>-->
     <table class="table">
       <caption>Coin Market</caption>
       <thead>

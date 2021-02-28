@@ -5,8 +5,8 @@
       Portfolio Value: {{Number((portfolio.value).toFixed(1)).toLocaleString('de-CH')}} USD
     </div>
     <div class="d-flex justify-content-end mb-2">
-      <button class="btn btn-primary text-white me-2" @click="editItem()">Add coin</button>
-      <button class="btn btn-danger text-white" @click="deleteItem('all')">Delete all</button>
+      <button class="btn btn-primary text-white me-2" @click="editItem()"><i class="bi-plus-square"></i></button>
+      <button class="btn btn-danger text-white" @click="deleteItem('all')"><i class="bi-trash"></i></button>
     </div>
     <table class="table">
       <caption>Portfolio</caption>
@@ -30,8 +30,8 @@
           <td class="text-end">{{coin.mshare.toFixed(2) +'%'}}</td>
           <td class="text-end">{{coin.share.toFixed(2) +'%'}}</td>
           <td class="text-end">
-            <button class="btn btn-primary text-white me-2" @click="editItem(coin)">Edit</button>
-            <button class="btn btn-danger text-white" @click="deleteItem(coin)">Delete</button>
+            <button class="btn btn-primary text-white me-2" @click="editItem(coin)"><i class="bi-pencil-square"></i></button>
+            <button class="btn btn-danger text-white" @click="deleteItem(coin)"><i class="bi-trash"></i></button>
           </td>
         </tr>
       </tbody>
@@ -40,11 +40,13 @@
       <h2 class="h3 d-flex justify-content-center">Coin</h2>
       <div class="mb-2">
         <label class="form-label" for="lastname">Symbol</label>
-        <input id="symbol" class="form-control" v-model="editedItem.symbol"/>
+        <select id="selectCoin" class="form-select" v-model="editedItem.coinId">
+          <option v-for="coin in coins" :key="coin.id" :value="coin.id">{{coin.symbol}}</option>
+        </select>
       </div>
       <div class="mb-2">
         <label class="form-label" for="firstname">Amount</label>
-        <input id="amount" class="form-control" v-model="editedItem.amount"/>
+        <input id="amount" class="form-control" type="number" v-model="editedItem.amount"/>
       </div>
       <menu class="d-flex justify-content-end pt-2 mb-1">
         <button class="btn btn-secondary" @click="dialog('dialog','close')">Abbrechen</button>&nbsp;
@@ -59,9 +61,11 @@ import { dialog } from '../lib/utils'
 import httpHeaders from '../lib/auth'
 export default {
   name: 'portfolio',
-  props: ['user'],
+  props: {
+    user: Object
+  },
 
-  setup() {
+  setup(props) {
     const portfolio = reactive({
       coins : [],
       value : 0,
@@ -77,30 +81,35 @@ export default {
         { text: 'Action', value: 'action'}
       ]
     })
+    const coins = reactive({})
     const editedItem = reactive({})
     const marketGlobals = {}
 
     function editItem(item) {
       dialog('dialog','open')
       // edit
-      if (item)
+      if (item) {
         Object.assign(editedItem, item)
+        document.getElementById('selectCoin').setAttribute('disabled', 'disabled')
+      }
       // new
       else {
-        Object.keys(editedItem).forEach(k => editedItem[k] = null)
+        Object.keys(editedItem).forEach(key => delete editedItem[key])
+        document.getElementById('selectCoin').removeAttribute('disabled')
       }
     }
 
     async function saveItem() {
-      // new item
+      let opt = { ...httpHeaders, body:JSON.stringify(editedItem)}
+       // new item since there is no id available
       if (editedItem.id === undefined) {
-        let opt = { ...httpHeaders, method:'POST', body:JSON.stringify(editedItem)}
-        await fetch('/api/portfolio/add', opt)
+        opt.method = 'POST'
+        await fetch(`/api/portfolio/${props.user.id}/add/`, opt)
       }
       // update item
       else { 
-        let opt = {...httpHeaders, method:'PUT', body:JSON.stringify(editedItem)}
-        await fetch('/api/portfolio/edit', opt)
+        opt.method = 'PUT'
+        await fetch(`/api/portfolio/${props.user.id}/edit`, opt)
       }
       dialog('dialog','close')
       getPortfolio()
@@ -109,11 +118,11 @@ export default {
     async function deleteItem(item) {
       if (item === 'all') {
         if (confirm('Are you sure you want to delete all your positions?')) {
-          await fetch(`/api/portfolio/delete`, {method:'DELETE'})
+          await fetch(`/api/portfolio/${props.user.id}/delete`, {method:'DELETE'})
         }
       } else {
         if (confirm('Are you sure you want to delete your ' + item.symbol + ' position?')) {
-          await fetch(`/api/portfolio/delete/${item.id}`, {method:'DELETE'})
+          await fetch(`/api/portfolio/${props.user.id}/delete/${item.id}`, {method:'DELETE'})
         }
       }
       getPortfolio()
@@ -127,7 +136,7 @@ export default {
     }
 
     async function getPortfolio() {
-      let response = await fetch('/api/portfolio')
+      let response = await fetch(`/api/portfolio/${props.user.id}`)
       portfolio.coins = await response.json()
       // sum the portfolio
       portfolio.value = portfolio.coins.reduce((accumulator, coin) => accumulator + coin.val, 0)
@@ -140,9 +149,17 @@ export default {
       })
     }
 
+    async function getCoins() {
+      let response = await fetch(`/api/coin/symbol`)
+      let data = await response.json()
+      Object.assign(coins,data)
+    }
+
     getMarketGlobals()
+    getCoins()
 
     return {
+      coins,
       portfolio,
       marketGlobals,
       editedItem,

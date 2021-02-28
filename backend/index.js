@@ -14,7 +14,7 @@ app.use(express.json())
 // add routes
 app.use('/api/coin', require('./endpoints/coin'))
 app.use('/api/portfolio', require('./endpoints/portfolio'))
-// app.use('/api/user', require('./endpoints/user'))
+app.use('/api/user', require('./endpoints/user'))
 
 // serve GUI as static content (index.html)
 app.use(express.static(`${__dirname}/../frontend/dist`))

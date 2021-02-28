@@ -8,19 +8,19 @@
           </router-link>
         </div>
         <div class="navigation">
-          <router-link v-if="!login.status" to="/login">Login</router-link>
-          <router-link v-if="login.status" to="/">Home</router-link> <span class="text-white" v-if="login.status"> | </span>
-          <router-link v-if="login.status" to="/portfolio">Portfolio</router-link> <span class="text-white" v-if="login.status"> | </span>
-          <router-link v-if="login.status" to="/import">Import</router-link>
+          <router-link v-if="!user.username" to="/login">Login</router-link>
+          <router-link v-if="user.username" to="/">Home</router-link> <span class="text-white" v-if="user.username"> | </span>
+          <router-link v-if="user.username" to="/portfolio">Portfolio</router-link> <span class="text-white" v-if="user.username"> | </span>
+          <router-link v-if="user.username" to="/import">Import</router-link>
         </div>
         <div class="navigation">
-          <router-link class="me-2" v-if="login.status" @click.prevent="logout" to="/login">Logout ({{user.data.username}})</router-link>
+          <router-link class="me-2" v-if="user.username" @click.prevent="logout" to="/login">Logout ({{user.username}})</router-link>
         </div>
       </div>
     </nav>
 
     <main class="container min-vh-100">
-      <router-view :user="user.data" @login="setUser"/>
+      <router-view :user="user" @login="setUser"/>
     </main><!-- /.container -->
 
     <footer class="footer mt-auto py-4 bg-light">
@@ -30,38 +30,52 @@
       </div>
     </footer>
 
+    <!-- Toast -->
+    <div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 5">
+      <div id="toast1" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto">Info</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          {{toastBody}}
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
 import router from "./router/index.js"
-import { reactive } from "vue"
+import { reactive, ref, onMounted } from "vue"
+import { Toast } from 'bootstrap/'
 
 export default {
   setup() {
-    const login = reactive ({status:true})
-    const user = reactive({ data: {username:'demo'} })
-      
+    const user = reactive({})
+
+    var toast
+    var toastBody = ref('')
+
     async function setUser(token) {
       let payload = token.replace(/-/g, "+").replace(/_/g, "/").split(".")[1]
       payload = JSON.parse(Buffer.from(payload, "base64").toString())
-      if (payload.exp > Date.now()) {
-        let response = await fetch(`/api/user/byName/${payload.username}`)
-        user.data = await response.json()
-        login.status = true
-        console.log('You are logged in as ' + user.data.username)
+      if (1000*payload.exp > Date.now()) {
+        Object.assign(user,payload)
+        console.log('You are logged in as ' + user.username)
         if (router.currentRoute.value.name === 'login') {
           router.push('/')
         }
       } else {
         localStorage.removeItem('jwt')
         router.push('/login')
+        Object.keys(user).forEach(key => delete user[key])
       }
     }
 
     function logout() {
-      login.status = false
-      user.data = {}
+      Object.keys(user).forEach(key => delete user[key])
       if (localStorage.jwt) {
         localStorage.removeItem('jwt')
         console.log('JSON Web Token in local storage deleted')
@@ -69,15 +83,29 @@ export default {
       }
     }
 
+    onMounted(async () =>  {
+      // initialize toast
+      let toastElement = document.getElementById('toast1')
+      toast = new Toast(toastElement, {delay:4000})
+      updateCoins()
+    }) 
+
+    async function updateCoins() {
+      let response = await fetch('/api/coin/update')
+      let data = await response.json()
+      toastBody.value = (data) ? 'Coins updated!' : data
+      toast.show()
+    }
+
     if (localStorage.jwt) {
-      // setUser(localStorage.jwt)
+      setUser(localStorage.jwt)
     }
 
     return {
-      login, 
       logout, 
       setUser, 
-      user
+      user,
+      toastBody
     }
   }
   

@@ -1,162 +1,87 @@
 const express = require('express')
-const user = express.Router()
-const knexconf = require('../db/knexfile')[process.env.NODE_ENV]
+const router = express.Router()
+const env = process.env.NODE_ENV || 'development'
+const knexconf = require('../db/knexfile')[env]
 const knex = require('knex')(knexconf)
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const auth = require('../middleware/auth')
-const jwtSecret = process.env.JWT_SECRET
+const jwtSecret = process.env.JWT_SECRET || 'Geheimnis'
 
 // read user
-user.get('/user', auth.isLoggedIn, async (req, res) =>{
+router.get('/', async (req, res) =>{
   let results = await knex('user')
   res.json(results)
 })
 
 // delete user
-user.delete('/user/:id', auth.isLoggedIn, async (req, res) => {
-  try {
+router.delete('/delete/:id', (req, res) => {
+  let id = req.params.id
+  knex('user').delete().where({id})
+    .then(() => {
+      res.json(results)
+    })
+    .catch(err => {
+      res.json(err)
+    })
+})
+
+// change password
+router.put('/update/:id', async (req, res) => {
+  let changedUser = req.body
+  let user = await knex('user').where({username:changedUser.username}).first()
+  let isequal = await bcrypt.compare(changedUser.password, user.password)
+  if (isequal && changedUser.newPassword === changedUser.newPasswordRepeat) {
+    var hash = await bcrypt.hashSync(changedUser.newPassword)
     let results = await knex('user')
-                        .where('id', req.params.id)
-                        .del()
-    res.json(results)
-  } catch (err) {
-    res.status(200).json(err)
+      .update({password: hash})
+      .where('username', changedUser.username)
+    .then(()=> {
+      res.json(results)
+    })
+    .catch(err => {
+      res.json(err)
+    })
+  } else {
+    console.log('password change denied');
   }
 })
 
-function validateRegister (req, res, next)  {
-  // username min length 3
-  if (!req.body.username || req.body.username.length < 2) {
-    return res.status(400).send({
-      msg: 'Please enter a username with at least 2 characters'
-    });
-  }
-  // password min 6 chars
-  if (!req.body.password || req.body.password.length < 6) {
-    return res.status(400).send({
-      msg: 'Please enter a password with at least 6 characters'
-    });
-  }
-  // password (repeat) does not match
-  if (
-    !req.body.password_repeat ||
-    req.body.password != req.body.password_repeat
-  ) {
-    return res.status(400).send({
-      msg: 'Both passwords must match'
-    });
-  }
-  next();
-}
-
-user.put('/user/:id', auth.isLoggedIn, async (req, res) => {
-  var user = await knex('user').where('username', req.body.username).then(data => data[0])
-  var isequal = await bcrypt.compare(req.body.password, user.password)
-  if (isequal && req.body.newPassword === req.body.newPasswordRepeat) {
-    try {
-      var hash = await bcrypt.hash(req.body.newPassword, 10)
-      let results = await knex('user')
-        .update({
-          password: hash,
-        })
-        .where('username', req.body.username)
+router.post('/register', (req, res) => {
+  let user = req.body
+  user.password = bcrypt.hashSync(user.password)
+  knex('user').insert(user)
+    .then((results) => {
       res.json(results)
-    } catch (err) {
-      res.status(200).json(err)
-    }
-  }
-});
+    })
+    .catch(err => {
+      res.json(err)
+    })
+})
 
-user.post('/user', validateRegister, async (req, res) => {
-  let results = await knex('user')
-                        .where('username', req.body.username)
-  if (results.length) {
-    return res.status(409).send({
-      msg: 'This username is already in use!'
-    });
-  } else {
-    // username is available
-    bcrypt.hash(req.body.password, 10, async (err, hash) => {
-      if (err) {
-        return res.status(500).send({
-          msg: err
-        });
-      } else {
-        // has hashed pw => add to database
-        var newUser = {
-          username: req.body.username,
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          password: hash,
-          registered: new Date()
+router.post('/login', (req,res)=> {
+  let credentials = req.body
+  if (credentials.username && credentials.password) {
+    knex('users').where('username', credentials.username).first()
+      .then(user => {
+        if (user && bcrypt.compareSync(credentials.password,user.password)) {
+          let {id,username,role} = user
+          let payload = {id, username, role}
+          let token = jwt.sign(payload, jwtSecret, {expiresIn: "1h"})
+          res.json({token})
+        } else {
+          res.json({message: 'Username or password is incorrect!'})
         }
-        // Postgres 11 does not yet support generated columns
-        if (knexconf.client === 'postgres' || knexconf.client === 'pg') {
-            newUser.fullname = newUser.firstname + ' ' + newUser.lastname
-        }
-        let results = await knex('user').insert(newUser)
-        res.json(results)
-      }
-    });
-  }
-});
-
-
-// support login also via GET request
-user.use('/user/login', function (req, res, next) {
-  if (req.method === 'GET') {
-    if (req.query.username && req.query.password) {
-      req.body.username = req.query.username
-      req.body.password = req.query.password
-      req.method = 'POST'
-      next(); // forward to POST handler below
-    } else {
-      return res.json({"msg":"You must provide username and password in the query"})
-    }
-  }
-  next();
-});
-
-user.post('/user/login', async (req, res) => {
-  let results = await knex('user')
-                        .where('username', req.body.username)
-  if (!results.length) {
-    return res.status(401).send({
-      msg: 'Username or password is incorrect!'
-    });
+      })
+      .catch(err => {
+        console.error(err.message)
+        res.status(500)
+        res.json(err.message)
+      })
   } else {
-    // check password
-    var user = results[0]
-    bcrypt.compare(req.body.password, user.password, async (bErr, bResult) => {
-      // wrong password
-      if (bErr) {
-        return res.status(401).send({
-          msg: 'Username or password is incorrect!'
-        });
-      }
-      if (bResult) {
-        const token = jwt.sign(
-          {username: user.username, userId: user.id},
-          jwtSecret, 
-          {expiresIn: '1d'}
-        );
-        let results = await knex('user')
-                              .update({
-                                lastlogin: new Date()})
-                              .where('id', user.id)
-        return res.status(200).send({
-          msg: 'Logged in!',
-          token: token,
-          user: user
-        });
-      } else {
-        return res.status(401).send({
-          msg: 'Username or password is incorrect!'
-        });
-      }
-    });
+    res.json({message: 'no valid body'})
   }
-});
+})
 
-module.exports = user
+
+
+module.exports = router

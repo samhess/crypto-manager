@@ -1,22 +1,20 @@
 <template>
   <div>
-    <h1>CSV Import</h1>
+    <h1>Portfolio Import</h1>
      <div class="mt-2 mb-2">
-      Um <select v-model="selectedEntity">
-        <option v-for="entity in entities" :value="entity.id" :key="entity.id">{{entity.name}}</option>
-      </select> zu importieren, kopieren Sie die CSV-Daten in das Textfeld. Die erste Zeile enthält die Spaltennamen ohne ID.<br>
+       Import CSV data from <a href="https://cointracking.info/current_balance.php" target="_blank">CoinTracking Balance</a>.
     </div>
     <div class="mb-2">
       <textarea class="form-control" v-model="csvData" rows=10 required></textarea>
     </div>
     <div class="mb-2 d-flex justify-content-end">
-      <button class="btn btn-primary text-white" @click="preview">Vorschau</button>
+      <button class="btn btn-primary text-white" @click="preview">Preview</button>
     </div>
     
     <dialog id="preview">
-      <h2 class="h3 d-flex justify-content-center">{{entities[selectedEntity].name}} Import Vorschau</h2>
+      <h2 class="h3 d-flex justify-content-center">Portfolio Import Preview</h2>
       <table class="table">
-        <caption>Tabelle der zu importierenden Daten</caption>
+        <caption>Coin to be imported</caption>
         <thead>
           <tr>
             <th scope="col" v-for="header in Object.keys(jsonData[0])" :key="header">{{header}}</th>
@@ -29,8 +27,8 @@
         </tbody>
       </table>
       <menu class="d-flex justify-content-end pt-2 mb-1">
-        <button class="btn btn-secondary text-white" @click="closeDialog('preview')">Abbrechen</button>&nbsp;
-        <button class="btn btn-primary text-white" @click="finalizeImport">{{entities[selectedEntity].name}} importieren</button>
+        <button class="btn btn-secondary text-white" @click="closeDialog('preview')">Cancel</button>&nbsp;
+        <button class="btn btn-primary text-white" @click="finalizeImport">Import portfolio</button>
       </menu>
     </dialog>
   </div>
@@ -49,7 +47,7 @@ export default {
     user: Object
   },
 
-  setup() {
+  setup(props) {
     const csvData = ref()
     const selectedEntity = ref(0)
     const entities = [
@@ -88,7 +86,7 @@ export default {
       let opt = {}
       opt.method = 'POST'
       opt.body = JSON.stringify(jsonData)
-      let response = await fetch(`/api/${entities[selectedEntity.value].endpoint}/import`, {...headers, ...opt})
+      let response = await fetch(`/api/portfolio/${props.user.id}/import`, {...headers, ...opt})
       let index = await response.json()
       console.log(`Insert successful at id ${index}`)
       closeDialog('preview')

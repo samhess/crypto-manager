@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const knexconf = require('../db/knexfile')['development']
+const express = require('express')
+const router = express.Router()
+const env = process.env.NODE_ENV || 'development'
+const knexconf = require('../db/knexfile')[env]
 const knex = require('knex')(knexconf)
 const fetch = require('node-fetch')
 const cmc = {
@@ -12,6 +13,11 @@ const cmc = {
 
 router.get('/', async (req, res) =>{
   var result = await knex('coins').orderBy('ranking')
+  res.json(result)
+})
+
+router.get('/symbol', async (req, res) =>{
+  var result = await knex('coins').select('id','symbol').orderBy('symbol')
   res.json(result)
 })
 
@@ -29,41 +35,54 @@ router.get('/update', async (req, res) => {
   let url = new URL(`${cmc.api}/cryptocurrency/listings/latest`)
   url.search = new URLSearchParams({start:1, limit:cmc.limit, convert:cmc.currency})
   let response = await fetch(url, {headers: cmc.headers})
+  // we receive a JSON object with the properties status and data
   let data = await response.json()
-  let coins = data.data.map(coin => {
-    return {
-      'id' : coin.id,
-      'symbol' : coin.symbol,
-      'name' : coin.name,
-      'slug' : coin.slug,
-      'ranking': coin.cmc_rank,
-      'price': coin.quote.USD.price,
-      'volume24h': coin.quote.USD.volume_24h,
-      'change1h': coin.quote.USD.percent_change_1h,
-      'change24h': coin.quote.USD.percent_change_24h,
-      'change7d': coin.quote.USD.percent_change_7d,
-      'marketCap': coin.quote.USD.market_cap,
-    }
-  })
-  let keys = Object.keys(coins[0])
-  let columns = keys.join()
-  let values = coins.reduce((accumulator, current, index, coins) => {
-    let values = Object.values(current).map(x => `'${x}'`).join()
-    values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
-    return accumulator + values
-  }, '')
-  let updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
-
-  knex.raw(`INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates}`)
-    .catch((err) => {
-      console.log('UPSERT error:', err.message)
+  if (data.data.length && data.status.error_code === 0) {
+    let coins = data.data.map(coin => {
+      return {
+        'id' : coin.id,
+        'symbol' : coin.symbol,
+        'name' : coin.name,
+        'slug' : coin.slug,
+        'ranking': coin.cmc_rank,
+        'price': coin.quote.USD.price,
+        'volume24h': coin.quote.USD.volume_24h,
+        'change1h': coin.quote.USD.percent_change_1h,
+        'change24h': coin.quote.USD.percent_change_24h,
+        'change7d': coin.quote.USD.percent_change_7d,
+        'marketCap': coin.quote.USD.market_cap,
+      }
     })
-    .then(() => console.log('UPSERT done'))
+    let keys = Object.keys(coins[0])
+    let columns = keys.join()
+    let values = coins.reduce((accumulator, current, index, coins) => {
+      let values = Object.values(current).map(x => `'${x}'`).join()
+      values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
+      return accumulator + values
+    }, '')
+    let updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
+
+    let result = knex.raw(`INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates}`)
+      .catch((err) => {
+        console.log('UPSERT error:', err.message)
+        res.json(err)
+      })
+      .then(() => {
+        console.log('UPSERT done')
+        res.json(result)
+      })
+  } else {
+    console.log(`got no data from CMC: ${data.status.error_message}`)
+  }
 })
 
 module.exports = router
 
-globals = {
+
+// just comment here below
+// data structure from CMC
+
+let globals = {
   active_cryptocurrencies: 4078,
   total_cryptocurrencies: 8477,
   active_market_pairs: 33779,

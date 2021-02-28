@@ -1,13 +1,16 @@
 const express = require('express')
 const router = express.Router()
-const knexconf = require('../db/knexfile')['development']
+const env = process.env.NODE_ENV || 'development'
+const knexconf = require('../db/knexfile')[env]
 const knex = require('knex')(knexconf)
 
 // read all positions
-router.get('/', async (req, res) => {
-  var result = await knex('portfolio')
+router.get('/:uid', async (req, res) => {
+  let uid = req.params.uid
+  let result = await knex('portfolio')
     .select('portfolio.id', 
       'portfolio.amount', 
+      'portfolio.coinId',
       'coins.ranking', 
       'coins.name' , 
       'coins.symbol', 
@@ -16,45 +19,55 @@ router.get('/', async (req, res) => {
       knex.raw('?? * ?? as val', ['portfolio.amount','coins.price']),  
       'coins.marketCap')
     .join('coins', 'portfolio.coinId', 'coins.id')
+    .where('portfolio.userId', uid)
     .orderBy('ranking')
     .select()
   res.json(result)
 })
 
 // add a position
-router.post('/add', async (req, res) => {
-  console.log(req.body);
-  var coin = await knex('coins').where('symbol',req.body.symbol).first()
-  var result = await knex('portfolio')
-    .insert({'amount': req.body.amount,'coinId': coin.id,'userId': 1})
+router.post('/:uid/add', async (req, res) => {
+  let uid = req.params.uid
+  let coin = req.body
+  let result = await knex('portfolio')
+    .insert({'amount':coin.amount, 'coinId':coin.coinId, 'userId':uid})
   res.json(result)
 })
 
 // edit a position
-router.put('/edit', async (req, res) => {
+router.put('/:uid/edit', async (req, res) => {
+  let uid = req.params.uid
   let coin = req.body
-  var result = await knex('portfolio')
+  let result = await knex('portfolio')
     .update('amount', coin.amount)
     .where('id',coin.id)
+    .where('userId',uid)
   res.json(result)
 })
 
 // delete a position
-router.delete('/delete/:id', async (req, res) => {
-  var results = await knex('portfolio')
-    .del()
-    .where('id', req.params.id)
+router.delete('/:uid/delete/:id', async (req, res) => {
+  let uid = req.params.uid
+  let coinid = req.params.id
+  let results = await knex('portfolio')
+    .delete()
+    .where('id', coinid)
+    .where('userId',uid)
   res.json(results)
 })
 
 // delete all positions
-router.delete('/delete', async (req, res) => {
-  var results = await knex('portfolio').delete()
+router.delete('/:uid/delete', async (req, res) => {
+  let uid = req.params.uid
+  let results = await knex('portfolio')
+    .delete()
+    .where('userId',uid)
   res.json(results)
 })
 
 // import
-router.post('/import', async (req, res) => {
+router.post('/:uid/import', async (req, res) => {
+  let uid = req.params.uid
   let positions = req.body
   positions.map(coin => {
     if (coin.Ticker === 'DOT2') coin.Ticker = 'DOT'
@@ -71,7 +84,7 @@ router.post('/import', async (req, res) => {
       return {
         amount: parseFloat(coin.Anzahl),
         coinId: foundCoin.id,
-        userId: 1
+        userId: uid
       }
     } else {
       console.log(`Cannot import ${coin.Ticker}`)
