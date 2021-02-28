@@ -18,7 +18,5 @@
     "url": "https://github.com/samhess/crypto-manager/issues"
   },
   "homepage": "https://github.com/samhess/crypto-manager#readme",
-  "dependencies": {
-    "@vue/cli-service": "^4.5.11"
-  }
+  "dependencies": {}
 }
