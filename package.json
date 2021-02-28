@@ -1,0 +1,20 @@
+{
+  "name": "crypto-manager",
+  "version": "1.0.0",
+  "description": "* Gets coin information from CoinMarketCap \r * Creating portfolio by adding or importing coins\r * Show market share and portfolio share of each coin",
+  "main": "backend/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samhess/crypto-manager.git"
+  },
+  "keywords": [],
+  "author": "Samuel Hess",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samhess/crypto-manager/issues"
+  },
+  "homepage": "https://github.com/samhess/crypto-manager#readme"
+}
