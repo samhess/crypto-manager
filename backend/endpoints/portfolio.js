@@ -2,7 +2,6 @@ const express = require('express')
 const router = express.Router()
 const env = process.env.NODE_ENV || 'development'
 const knexconf = require('../db/knexfile')[env]
-if (process.env.NODE_ENV === 'production') knexconf = process.env.DATABASE_URL
 const knex = require('knex')(knexconf)
 
 // read all positions
@@ -11,16 +10,16 @@ router.get('/:uid', async (req, res) => {
   let result = await knex('portfolio')
     .select('portfolio.id', 
       'portfolio.amount', 
-      'portfolio.coinId',
+      'portfolio.coinid',
       'coins.ranking', 
-      'coins.name' , 
+      'coins.name' ,  
       'coins.symbol', 
       'coins.price', 
       // portfolio.amount * coins.price AS val
       knex.raw('?? * ?? as val', ['portfolio.amount','coins.price']),  
-      'coins.marketCap')
-    .join('coins', 'portfolio.coinId', 'coins.id')
-    .where('portfolio.userId', uid)
+      'coins.marketcap')
+    .join('coins', 'portfolio.coinid', 'coins.id')
+    .where('portfolio.userid', uid)
     .orderBy('ranking')
     .select()
   res.json(result)
@@ -31,7 +30,7 @@ router.post('/:uid/add', async (req, res) => {
   let uid = req.params.uid
   let coin = req.body
   let result = await knex('portfolio')
-    .insert({'amount':coin.amount, 'coinId':coin.coinId, 'userId':uid})
+    .insert({'amount':coin.amount, 'coinid':coin.coinId, 'userid':uid})
   res.json(result)
 })
 
@@ -42,7 +41,7 @@ router.put('/:uid/edit', async (req, res) => {
   let result = await knex('portfolio')
     .update('amount', coin.amount)
     .where('id',coin.id)
-    .where('userId',uid)
+    .where('userid',uid)
   res.json(result)
 })
 
@@ -53,7 +52,7 @@ router.delete('/:uid/delete/:id', async (req, res) => {
   let results = await knex('portfolio')
     .delete()
     .where('id', coinid)
-    .where('userId',uid)
+    .where('userid',uid)
   res.json(results)
 })
 
@@ -62,7 +61,7 @@ router.delete('/:uid/delete', async (req, res) => {
   let uid = req.params.uid
   let results = await knex('portfolio')
     .delete()
-    .where('userId',uid)
+    .where('userid',uid)
   res.json(results)
 })
 

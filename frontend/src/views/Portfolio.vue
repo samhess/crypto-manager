@@ -143,7 +143,7 @@ export default {
       // add properties market share and portfolio share to each coin
       portfolio.coins.map(coin => {
         let marketCap = marketGlobals.quote.USD.total_market_cap
-        coin.mshare = 100 * coin.marketCap / marketCap
+        coin.mshare = 100 * coin.marketcap / marketCap
         coin.share = 100 * coin.val / portfolio.value
         return coin
       })

@@ -22,5 +22,3 @@ app.use(fallback)
 
 // start server
 app.listen(port, console.log(`Serving GUI at http://localhost:${port}/ and REST API at http://localhost:${port}/api`))
-
-console.log(process.env.DATABASE_URL)

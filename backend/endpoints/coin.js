@@ -7,7 +7,7 @@ const fetch = require('node-fetch')
 const cmc = {
   api : 'https://pro-api.coinmarketcap.com/v1',
   headers : {'X-CMC_PRO_API_KEY': '537aff70-7beb-4491-ae8e-852501fc9259'},
-  limit: 500,
+  limit: 2,
   currency : 'USD'
 }
 
@@ -50,7 +50,7 @@ router.get('/update', async (req, res) => {
         'change1h': coin.quote.USD.percent_change_1h,
         'change24h': coin.quote.USD.percent_change_24h,
         'change7d': coin.quote.USD.percent_change_7d,
-        'marketCap': coin.quote.USD.market_cap,
+        'marketcap': coin.quote.USD.market_cap
       }
     })
     let keys = Object.keys(coins[0])
@@ -61,16 +61,22 @@ router.get('/update', async (req, res) => {
       return accumulator + values
     }, '')
     let updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
+    updates = keys.slice(2).map(key => `${key}=excluded.${key}`).join()
 
-    let result = knex.raw(`INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates}`)
+    let command = `INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates};`
+    if (knexconf.client === 'postgres') {
+      command = `INSERT INTO coins (${columns}) VALUES ${values} ON CONFLICT (id) DO UPDATE SET ${updates}`
+    }
+    let result = knex.raw(command)
+      .then(() => {
+        console.log('UPSERT done')
+        res.json(result)
+      })  
       .catch((err) => {
         console.log('UPSERT error:', err.message)
         res.json(err)
       })
-      .then(() => {
-        console.log('UPSERT done')
-        res.json(result)
-      })
+
   } else {
     console.log(`got no data from CMC: ${data.status.error_message}`)
   }

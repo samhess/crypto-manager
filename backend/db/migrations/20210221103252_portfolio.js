@@ -2,9 +2,9 @@
 exports.up = function(knex) {
   return knex.schema.createTable('portfolio', (table) => {
     table.increments('id')
-    table.decimal('amount', 10, 2)
-    table.integer('coinId').unsigned().references('coins.id')
-    table.integer('userId').unsigned().references('users.id')
+    table.float('amount', 10, 2)
+    table.integer('coinid').unsigned().references('coins.id')
+    table.integer('userid').unsigned().references('users.id')
   })
 }
 

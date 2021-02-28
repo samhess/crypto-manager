@@ -12,7 +12,9 @@
       <caption>Coin Market</caption>
       <thead>
         <tr>
-          <th v-for="header in headers" :key="header" scope="col">{{header.text}}</th>
+          <th v-for="header in headers" :key="header" scope="col"
+              :class="['price', 'change1h', 'change24h', 'change7d', 'share'].includes(header.value) ? 'text-end':''" 
+          >{{header.text}}</th>
         </tr>
       </thead>
       <tbody>
@@ -20,11 +22,11 @@
           <td>{{coin.ranking}}</td>
           <td>{{coin.name}}</td>
           <td>{{coin.symbol}}</td>
-          <td>{{coin.price}}</td>
-          <td :class="getColor(coin.change1h)">{{coin.change1h+'%'}}</td>
-          <td :class="getColor(coin.change24h)">{{coin.change24h+'%'}}</td>
-          <td :class="getColor(coin.change7d)">{{coin.change7d+'%'}}</td>
-          <td>{{coin.share.toFixed(2) + '%'}}</td>
+          <td class="text-end">{{coin.price.toLocaleString('de-CH', {style:'currency', currency:'USD'})}}</td>
+          <td :class="getColor(coin.change1h)">{{coin.change1h.toFixed(2) +'%'}}</td>
+          <td :class="getColor(coin.change24h)">{{coin.change24h.toFixed(2) +'%'}}</td>
+          <td :class="getColor(coin.change7d)">{{coin.change7d.toFixed(2) +'%'}}</td>
+          <td class="text-end">{{coin.share.toFixed(2) + '%'}}</td>
         </tr>
       </tbody>
     </table>
@@ -56,7 +58,7 @@ export default {
     }
     
     function getColor(change) {
-      return (change <= 0) ? 'text-danger' : 'text-success'
+      return (change <= 0) ? 'text-danger text-end' : 'text-success text-end'
     }
 
     async function getMarketGlobals() {
@@ -74,7 +76,7 @@ export default {
       coins.push(...data)
       let marketCap = marketGlobals.quote.USD.total_market_cap
       coins.map(coin => {
-        coin.share = 100 * coin.marketCap / marketCap
+        coin.share = 100 * coin.marketcap / marketCap
         return coin
       })
     }
