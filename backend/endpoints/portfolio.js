@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const env = process.env.NODE_ENV || 'development'
 const knexconf = require('../db/knexfile')[env]
+if (process.env.NODE_ENV === 'production') knexconf = process.env.DATABASE_URL
 const knex = require('knex')(knexconf)
 
 // read all positions
