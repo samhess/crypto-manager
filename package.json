@@ -4,7 +4,9 @@
   "description": "* Gets coin information from CoinMarketCap \r * Creating portfolio by adding or importing coins\r * Show market share and portfolio share of each coin",
   "main": "backend/index.js",
   "scripts": {
-    "start": "npm --prefix frontend run build && node backend/index.js",
+    "postinstall": "cd backend;npm i && cd ../frontend;npm i",
+    "prestart" : "npm --prefix frontend run build",
+    "start": "node backend/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
