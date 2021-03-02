@@ -1,6 +1,6 @@
 {
-  "name": "crypto-manager",
-  "version": "0.1.0",
+  "name": "crypto-manager-backend",
+  "version": "1.0.0",
   "description": "crypto manager",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,6 @@
   "homepage": "https://github.com/samhess/crypto-manager#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.3",

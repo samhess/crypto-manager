@@ -1,5 +1,5 @@
 let dburl = process.env.DATABASE_URL
-let props = {} 
+let props = {}
 if (dburl) {
   props.user = dburl.split('://')[1].split(':').shift()
   props.password = dburl.split('@').shift().split(':').pop()
@@ -13,7 +13,7 @@ module.exports = {
     client: 'mysql',
     connection: {
       database: 'crypto',
-      user:     'root',
+      user: 'root',
       password: 'sml12345'
     }
   },

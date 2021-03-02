@@ -2,7 +2,7 @@
 exports.up = function(knex) {
   return knex.schema.createTable('coins', (table) => {
     table.integer('id').unsigned().primary()
-    table.string('symbol').unique()
+    table.string('symbol')
     table.string('name')
     table.string('slug')
     table.integer('ranking')

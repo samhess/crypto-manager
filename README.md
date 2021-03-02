@@ -1,5 +1,3 @@
-[[_TOC_]]
-
 # Crypto Manager
 ## Features
 * Get coin information from CoinMarketCap 
@@ -14,14 +12,17 @@ Supported databases include
 * PostgreSQL (tested on Heroku)
 
 ## Development
-### Local Installation
+### Database Setup
+In the SQL client call:
 ```sql
 CREATE DATABASE crypto;
 ```
+Use the Knex CLI to create the tables and seed them:
 ```shell
 knex migrate:latest
 knex seed:run
 ```
+Start backend and frontend:
 ### Run locally
 ```shell
 cd backend; nodemon
@@ -29,26 +30,27 @@ cd frontend; npm run serve
 ```
 
 Simulate production environment
-```powershell
-$env:NODE_ENV="production"
+```shell
+$env:NODE_ENV = "production"
+$env:DATABASE_URL = heroku config:get DATABASE_URL -a cryptomanager1
+knex migrate:down --env 'production'
+knex seed:run --env 'production'
 ```
 
 ## Deployment
-Heroku will just call `npm install` and `npm start`.
-We will install frontend and backend dependencies on postinstall.
-Then we will build the frontend.
-Finally, we start the app.
+Heroku will just call `npm install` , `npm build` and `npm start`.
+We will install frontend and backend dependencies on *install*.
+Then we will build the frontend on *build*.
+Finally, we start the app on *start*.
 ```json
-"postinstall": "cd backend; npm i && cd ../frontend; npm i",
-"prestart": "npm --prefix frontend run build",
-"start": "node backend/index.js",
-```
-In order to build the frontend on heroku the development dependencies have to be and remain installed. 
-This can be achieved by modifying the NPM config
-```shell
-heroku config:set NPM_CONFIG_PRODUCTION=false
+"scripts": {
+  "install": "cd backend; npm i && cd ../frontend; npm i",
+  "build": "npm --prefix frontend run build",
+  "start": "node backend/index.js"
+},
 ```
 
 # Links
+* [Crypto Manager](https://cryptomanager1.herokuapp.com/)
 * [CoinMarketCap](https://coinmarketcap.com)
 * [CoinTracking](https://cointracking.info)
