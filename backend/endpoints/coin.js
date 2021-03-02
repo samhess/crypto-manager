@@ -10,6 +10,7 @@ const cmc = {
   limit: 500,
   currency : 'USD'
 }
+var lastUpdate = 0
 
 router.get('/', async (req, res) =>{
   var result = await knex('coins').orderBy('ranking')
@@ -32,55 +33,60 @@ router.get('/market/update', async (req, res) =>{
 })
 
 router.get('/update', async (req, res) => {
-  let url = new URL(`${cmc.api}/cryptocurrency/listings/latest`)
-  url.search = new URLSearchParams({start:1, limit:cmc.limit, convert:cmc.currency})
-  let response = await fetch(url, {headers: cmc.headers})
-  // we receive a JSON object with the properties status and data
-  let data = await response.json()
-  if (data.data.length && data.status.error_code === 0) {
-    let coins = data.data.map(coin => {
-      return {
-        'id' : coin.id,
-        'symbol' : coin.symbol,
-        'name' : coin.name,
-        'slug' : coin.slug,
-        'ranking': coin.cmc_rank,
-        'price': coin.quote.USD.price,
-        'volume24h': coin.quote.USD.volume_24h,
-        'change1h': coin.quote.USD.percent_change_1h,
-        'change24h': coin.quote.USD.percent_change_24h,
-        'change7d': coin.quote.USD.percent_change_7d,
-        'marketcap': coin.quote.USD.market_cap
-      }
-    })
-    let keys = Object.keys(coins[0])
-    let columns = keys.join()
-    let values = coins.reduce((accumulator, current, index, coins) => {
-      let values = Object.values(current).map(x => `'${x}'`).join()
-      values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
-      return accumulator + values
-    }, '')
-    let updates, command
-    if (knexconf.client === 'mysql') {
-      updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
-      command = `INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates};`
-    }
-    else if (knexconf.client === 'postgres') {
-      updates = keys.slice(2).map(key => `${key}=excluded.${key}`).join()
-      command = `INSERT INTO coins (${columns}) VALUES ${values} ON CONFLICT (id) DO UPDATE SET ${updates}`
-    } 
-    let result = knex.raw(command)
-      .then(() => {
-        console.log('UPSERT done')
-        res.json(result)
-      })  
-      .catch((err) => {
-        console.log('UPSERT error:', err.message)
-        res.json(err)
+  if (Date.now() - lastUpdate > 1000 * 60 ) {
+    let url = new URL(`${cmc.api}/cryptocurrency/listings/latest`)
+    url.search = new URLSearchParams({start:1, limit:cmc.limit, convert:cmc.currency})
+    let response = await fetch(url, {headers: cmc.headers})
+    // we receive a JSON object with the properties status and data
+    let data = await response.json()
+    if (data.data.length && data.status.error_code === 0) {
+      // set last update
+      lastUpdate = new Date(data.status.timestamp).valueOf()
+      let coins = data.data.map(coin => {
+        return {
+          'id' : coin.id,
+          'symbol' : coin.symbol,
+          'name' : coin.name,
+          'slug' : coin.slug,
+          'ranking': coin.cmc_rank,
+          'price': coin.quote.USD.price,
+          'volume24h': coin.quote.USD.volume_24h,
+          'change1h': coin.quote.USD.percent_change_1h,
+          'change24h': coin.quote.USD.percent_change_24h,
+          'change7d': coin.quote.USD.percent_change_7d,
+          'marketcap': coin.quote.USD.market_cap
+        }
       })
-
+      let keys = Object.keys(coins[0])
+      let columns = keys.join()
+      let values = coins.reduce((accumulator, current, index, coins) => {
+        let values = Object.values(current).map(x => `'${x}'`).join()
+        values = (index+1 < coins.length) ? `(${values}),` : `(${values})`
+        return accumulator + values
+      }, '')
+      let updates, command
+      if (knexconf.client === 'mysql') {
+        updates = keys.slice(2).map(key => `${key}=VALUES(${key})`).join()
+        command = `INSERT INTO coins (${columns}) VALUES ${values} ON DUPLICATE KEY UPDATE ${updates};`
+      }
+      else if (knexconf.client === 'postgres') {
+        updates = keys.slice(2).map(key => `${key}=excluded.${key}`).join()
+        command = `INSERT INTO coins (${columns}) VALUES ${values} ON CONFLICT (id) DO UPDATE SET ${updates}`
+      } 
+      let result = knex.raw(command)
+        .then(() => {
+          console.log('UPSERT done')
+          res.json(result)
+        })  
+        .catch((err) => {
+          console.log('UPSERT error:', err.message)
+          res.json(err)
+        })
+    } else {
+      console.log(`got no data from CMC: ${data.status.error_message}`)
+    }
   } else {
-    console.log(`got no data from CMC: ${data.status.error_message}`)
+    console.log('skipping coin update!')
   }
 })
 

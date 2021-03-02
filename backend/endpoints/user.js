@@ -39,6 +39,7 @@ router.put('/update/:id', async (req, res) => {
       res.json(results)
     })
     .catch(err => {
+      console.log(err)
       res.json(err)
     })
   } else {
@@ -49,12 +50,18 @@ router.put('/update/:id', async (req, res) => {
 router.post('/register', (req, res) => {
   let user = req.body
   user.password = bcrypt.hashSync(user.password)
-  knex('user').insert(user)
+  user.status = 'enabled'
+  knex('users').insert(user)
     .then((results) => {
       res.json(results)
     })
     .catch(err => {
-      res.json(err)
+      if (err.code === 'ER_DUP_ENTRY') {
+        res.json({message:'User already exists!'})
+      } else {
+        console.log(err)
+        res.json(err)
+      }
     })
 })
 

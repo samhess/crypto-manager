@@ -49,6 +49,11 @@ Finally, we start the app on *start*.
   "start": "node backend/index.js"
 },
 ```
+But in prior, we have to set *NPM_CONFIG_PRODUCTION* to false, otherwise the development dependencies 
+would not be installed and building the frontend would fail:
+```shell
+heroku config:set NPM_CONFIG_PRODUCTION=false -a cryptomanager1
+```
 
 # Links
 * [Crypto Manager](https://cryptomanager1.herokuapp.com/)

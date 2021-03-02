@@ -18,6 +18,7 @@
            <div style="color:red">{{validationMessages.login}}</div>
         </div>
         <menu class="d-flex justify-content-end">
+          <button class="btn btn-secondary me-2" type="sumbit" @click="register">Register</button>
           <button class="btn btn-primary" type="sumbit" @click="login">Login</button>
         </menu>
       </form>
@@ -27,6 +28,7 @@
 
 <script>
 import { reactive } from "vue";
+import httpHeaders from '../lib/auth'
 
 export default {
   name: "Login",
@@ -51,9 +53,8 @@ export default {
       if (document.forms.login.checkValidity()) {
         let opt = {}
         opt.method = "POST"
-        opt.headers = { "Content-Type": "application/json" }
-        opt.body = JSON.stringify(credentials);
-        let response = await fetch("/api/user/login", opt)
+        opt.body = JSON.stringify(credentials)
+        let response = await fetch("/api/user/login", {...httpHeaders, ...opt})
         let data = await response.json()
         if (data.message) {
           // login nok
@@ -67,7 +68,31 @@ export default {
       }
     }
 
-    return { validate, validationMessages, login, credentials }
+    async function register() {
+      if (document.forms.login.checkValidity()) {
+        let opt = {}
+        opt.method = "POST"
+        opt.body = JSON.stringify(credentials);
+        let response = await fetch("/api/user/register", {...httpHeaders, ...opt})
+        let data = await response.json()
+        if (data.message) {
+          // login nok
+          validationMessages.login = data.message
+          document.forms.login.classList.remove('was-validated')
+        } else {
+          // login ok
+          validationMessages.login = 'Register successful. You can login now!'
+        }
+      }
+    }
+
+    return { 
+      validate, 
+      validationMessages, 
+      login,
+      register,
+      credentials 
+    }
   }
 }
 </script>
