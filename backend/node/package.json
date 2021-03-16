@@ -1,0 +1,32 @@
+{
+  "name": "crypto-manager-backend",
+  "version": "1.0.0",
+  "description": "crypto manager",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samhess/crypto-manager.git"
+  },
+  "keywords": [
+    "Express",
+    "API"
+  ],
+  "author": "Samuel Hess",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samhess/crypto-manager/issues"
+  },
+  "homepage": "https://github.com/samhess/crypto-manager#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "knex": "^0.21.3",
+    "mysql": "^2.18.1",
+    "node-fetch": "^2.6.1",
+    "pg": "^8.5.1"
+  }
+}
