@@ -56,6 +56,7 @@ export default {
         opt.body = JSON.stringify(credentials)
         let response = await fetch("/api/user/login", {...httpHeaders, ...opt})
         let data = await response.json()
+        console.log(data)
         if (data.message) {
           // login nok
           validationMessages.login = data.message

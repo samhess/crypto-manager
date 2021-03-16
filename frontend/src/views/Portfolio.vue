@@ -138,6 +138,11 @@ export default {
     async function getPortfolio() {
       let response = await fetch(`/api/portfolio/${props.user.id}`)
       portfolio.coins = await response.json()
+      console.log(portfolio.coins)
+      portfolio.coins.map(coin => {
+        coin.val = coin.amount * coin.price
+        return coin
+      })
       // sum the portfolio
       portfolio.value = portfolio.coins.reduce((accumulator, coin) => accumulator + coin.val, 0)
       // add properties market share and portfolio share to each coin

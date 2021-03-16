@@ -61,6 +61,7 @@ export default {
     async function setUser(token) {
       let payload = token.replace(/-/g, "+").replace(/_/g, "/").split(".")[1]
       payload = JSON.parse(Buffer.from(payload, "base64").toString())
+      console.log(payload);
       if (1000*payload.exp > Date.now()) {
         Object.assign(user,payload)
         console.log('You are logged in as ' + user.username)
@@ -91,8 +92,8 @@ export default {
     }) 
 
     async function updateCoins() {
-      let response = await fetch('/api/coin/update')
-      let data = await response.json()
+      // let response = await fetch('/api/coin/update')
+      let data = 'nicht' // await response.json()
       toastBody.value = (data) ? 'Coins updated!' : data
       toast.show()
     }

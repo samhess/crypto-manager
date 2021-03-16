@@ -64,6 +64,7 @@ export default {
     async function getMarketGlobals() {
       let response = await fetch('/api/coin/market/update')
       let data = await response.json()
+      console.log(data);
       Object.assign(marketGlobals,data)
       marketCap.value = Number((marketGlobals.quote.USD.total_market_cap).toFixed(0)).toLocaleString('de-CH')
       getCoins()
