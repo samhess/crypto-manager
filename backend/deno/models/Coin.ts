@@ -18,8 +18,16 @@ class Coin extends Model {
     change1h: DataTypes.FLOAT,
     change24h: DataTypes.FLOAT,
     change7d: DataTypes.FLOAT,
-    volume24h: DataTypes.FLOAT,
-    marketcap: DataTypes.FLOAT,
+    volume24h: {
+      type: DataTypes.FLOAT,
+      precision: 20,
+      scale: 2
+    },
+    marketcap: {
+      type: DataTypes.FLOAT,
+      precision: 20,
+      scale: 2
+    }
   }
 }
 
