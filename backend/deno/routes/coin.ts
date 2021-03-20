@@ -1,5 +1,5 @@
 import { Router, Status } from "https://deno.land/x/oak/mod.ts"
-import Coin from "../models/Coin.ts"
+import { Coin } from "../models/Models.ts"
 
 const router = new Router()
 
