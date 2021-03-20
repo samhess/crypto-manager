@@ -9,6 +9,7 @@ class Coin extends Model {
     id: { 
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: false
     },
     symbol: DataTypes.STRING,
     name: DataTypes.STRING,
