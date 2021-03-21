@@ -1,13 +1,13 @@
-import { Application } from "https://deno.land/x/oak/mod.ts"
+import { oak } from './deps.ts'
 import logger from './middleware/logger.ts'
 import { coinRouter, userRouter, portfolioRouter } from './routes/routes.ts'
-import db from './models/Database.ts'
-import { Portfolio, Coin, User } from './models/Models.ts'
-import { seedUser } from './seeds/seeds.ts' 
+import db from './db/Database.ts'
+import { Portfolio, Coin, User } from './db/models/Models.ts'
+import { seedUser } from './db/seeds/seeds.ts' 
 
 // const
 const port = 80
-const app = new Application()
+const app = new oak.Application()
 
 // middlewares
 app.use(logger)

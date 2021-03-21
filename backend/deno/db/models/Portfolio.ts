@@ -1,6 +1,7 @@
-import { DataTypes, Model, Relationships } from 'https://deno.land/x/denodb/mod.ts'
-import Coin from "../models/Coin.ts"
-import User from "../models/User.ts"
+import { denodb } from '../../deps.ts'
+import Coin from './Coin.ts'
+import User from './User.ts'
+const { DataTypes, Model, Relationships } = denodb
 
 class Portfolio extends Model {
   static table = 'portfolio'

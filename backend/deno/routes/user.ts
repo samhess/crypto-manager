@@ -1,10 +1,10 @@
 
-import { Router, Status } from "https://deno.land/x/oak/mod.ts"
-import { User } from "../models/Models.ts"
-import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts"
-import * as djwt from "https://deno.land/x/djwt/mod.ts"
+import { oak } from '../deps.ts'
+import { bcrypt } from '../deps.ts'
+import { djwt } from '../deps.ts'
+import { User } from '../db/models/Models.ts'
 
-const router = new Router()
+const router = new oak.Router()
 
 router.post('/login', async ctx => {
   let credentials = await ctx.request.body().value
@@ -23,14 +23,14 @@ router.post('/login', async ctx => {
           role:user.role
         }
         let token = await djwt.create({ alg: "HS512", typ: "JWT" }, payload, "secret")
-        ctx.response.status = Status.OK
+        ctx.response.status = oak.Status.OK
         ctx.response.body = {token}
       } else {
-        ctx.response.status = Status.OK
+        ctx.response.status = oak.Status.OK
         ctx.response.body = {message: 'Username or password is incorrect!'}
       }
     } else {
-      ctx.response.status = Status.OK
+      ctx.response.status = oak.Status.OK
       ctx.response.body = {message: 'Username or password is incorrect!'}
     }
   }

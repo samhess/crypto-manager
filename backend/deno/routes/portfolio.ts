@@ -1,7 +1,7 @@
-import { Router, Status } from "https://deno.land/x/oak/mod.ts"
-import { Portfolio, Coin } from "../models/Models.ts"
+import { oak } from '../deps.ts'
+import { Portfolio, Coin } from "../db/models/Models.ts"
 
-const router = new Router()
+const router = new oak.Router()
 
 // read all positions
 router.get('/:uid', async ctx => {
@@ -12,7 +12,7 @@ router.get('/:uid', async ctx => {
     .where('portfolio.userid', uid)
     .orderBy('ranking')
     .all()
-  ctx.response.status = Status.OK
+  ctx.response.status = oak.Status.OK
   ctx.response.body = result
 })
 

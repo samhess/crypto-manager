@@ -1,4 +1,5 @@
-import { DataTypes, Model } from 'https://deno.land/x/denodb/mod.ts'
+import { denodb } from '../../deps.ts'
+const { DataTypes, Model } = denodb
 
 class User extends Model {
   static table = 'users'
