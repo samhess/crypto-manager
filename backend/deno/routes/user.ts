@@ -2,7 +2,7 @@
 import { oak } from '../deps.ts'
 import { bcrypt } from '../deps.ts'
 import { djwt } from '../deps.ts'
-import { User } from '../db/models/Models.ts'
+import  User  from '../db/models/User.ts'
 
 const router = new oak.Router()
 

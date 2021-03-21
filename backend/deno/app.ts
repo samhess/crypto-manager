@@ -3,7 +3,7 @@ import logger from './middleware/logger.ts'
 import { coinRouter, userRouter, portfolioRouter } from './routes/routes.ts'
 import db from './db/Database.ts'
 import { Portfolio, Coin, User } from './db/models/Models.ts'
-import { seedUser } from './db/seeds/seeds.ts' 
+import { seedUser } from './db/seeds/seeds.ts'
 
 // const
 const port = 80

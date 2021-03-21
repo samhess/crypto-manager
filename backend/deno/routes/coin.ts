@@ -1,5 +1,5 @@
 import { oak } from '../deps.ts'
-import { Coin } from "../db/models/Models.ts"
+import Coin from "../db/models/Coin.ts"
 
 const router = new oak.Router()
 
